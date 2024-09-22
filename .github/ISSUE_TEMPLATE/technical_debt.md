@@ -1,14 +1,4 @@
 ---
-name: Custom issue template
-about: Describe this issue template's purpose here.
-title: ''
-labels: ''
-assignees: ''
-
----
-
-
----
 name: Technical Debt report
 about: Create a report to help us improve
 title: ''
