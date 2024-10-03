@@ -389,8 +389,7 @@ public class Main {
                 }
             } else {
                 if (projectName == null) {
-                    System.out.println(
-                            "Setting projectName to '" + args[i] + "'");
+                    LOG.info("Setting projectName to '" + args[i] + "'");
                     projectName = args[i];
                 }
             }
@@ -750,37 +749,6 @@ public class Main {
          * {@link Argo} perform the initialization.
          */
 
-        // JavaWebStart properties for logs are :
-        // deployment.user.logdir & deployment.user.tmp
-//        if (System.getProperty("log4j.configuration") == null) {
-//            Properties props = new Properties();
-//            InputStream stream = null;
-//            try {
-//                stream = Thread.currentThread().getContextClassLoader()
-//                        .getResourceAsStream(DEFAULT_LOGGING_CONFIGURATION);
-//
-//                if (stream != null) {
-//                    props.load(stream);
-//                }
-//            } catch (IOException io) {
-//                io.printStackTrace();
-//                System.exit(-1);
-//            }
-//
-//            PropertyConfigurator.configure(props);
-//
-//            if (stream == null) {
-//                BasicConfigurator.configure();
-//                Logger.getRootLogger().getLoggerRepository().setThreshold(
-//                        Level.ERROR); // default level is DEBUG
-//                Logger.getRootLogger().error(
-//                        "Failed to find valid log4j properties"
-//                        + "in log4j.configuration"
-//                        + "using default logging configuration");
-//            }
-//        }
-
-        // initLogging();
         LOG = Logger.getLogger(Main.class.getName());
     }
 
