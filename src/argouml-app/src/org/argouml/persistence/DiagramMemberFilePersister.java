@@ -165,7 +165,7 @@ class DiagramMemberFilePersister extends MemberFilePersister {
             try {
                 outputWriter.flush();
             } catch (IOException e) {
-                LOG.log(Level.SEVERE, "Exception occurred during flush :\"{0\"}", e.getLocalizedMessage());
+                LOG.log(Level.SEVERE, "Exception occurred during flush : {0}", e.getLocalizedMessage());
             }
         }
 

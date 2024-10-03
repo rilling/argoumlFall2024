@@ -304,7 +304,7 @@ public class UmlFilePersister extends AbstractFilePersister {
             try {
                 filteredStream.reallyClose();
             } catch (IOException e) {
-                LOG.log(Level.SEVERE, "Exception occurred during really close test:\"{0\"}", e.getLocalizedMessage());
+                LOG.log(Level.SEVERE, "Exception occurred during really close test: {0}", e.getLocalizedMessage());
             }
         }
     }
