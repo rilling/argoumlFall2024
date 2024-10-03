@@ -399,7 +399,7 @@ public class ToDoItem implements Serializable, WizardItem {
 	if (!getHeadline().equals(i.getHeadline())) {
 	    return false;
 	}
-	if (!(getPoster() == (i.getPoster()))) {
+	if (getPoster() != (i.getPoster())) {
 	    return false;
 	}
 
