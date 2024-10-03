@@ -389,8 +389,7 @@ public class Main {
                 }
             } else {
                 if (projectName == null) {
-                    System.out.println(
-                            "Setting projectName to '" + args[i] + "'");
+                    LOG.info("Setting projectName to '" + args[i] + "'");
                     projectName = args[i];
                 }
             }
@@ -749,7 +748,7 @@ public class Main {
          *  If it is set, then we let the static initializer in
          * {@link Argo} perform the initialization.
          */
-        
+
         LOG = Logger.getLogger(Main.class.getName());
     }
 
