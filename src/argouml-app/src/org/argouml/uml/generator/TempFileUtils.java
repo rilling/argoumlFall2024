@@ -42,6 +42,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -62,14 +64,9 @@ public class TempFileUtils {
      * @return a newly created, empty, temporary directory
      */
     public static File createTempDir() {
-        File tmpdir = null;
         try  {
-            tmpdir = File.createTempFile("argouml", null);
-            tmpdir.delete();
-            if (!tmpdir.mkdir()) {
-                return null;
-            }
-            return tmpdir;
+            Path tempPath = Files.createTempDirectory("");
+            return tempPath.toFile();
         } catch (IOException ioe) {
             LOG.log(Level.SEVERE, "Error while creating a temporary directory", ioe);
             return null;
