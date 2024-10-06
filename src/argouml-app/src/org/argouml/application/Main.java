@@ -909,6 +909,8 @@ class PostLoad implements Runnable {
             Thread.sleep(1000);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "post load no sleep", ex);
+            Thread.currentThread().interrupt();
+            return;
         }
         for (Runnable r : postLoadActions) {
             r.run();
@@ -916,6 +918,8 @@ class PostLoad implements Runnable {
                 Thread.sleep(100);
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "post load no sleep2", ex);
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
