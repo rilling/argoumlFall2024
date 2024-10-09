@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
@@ -271,16 +272,25 @@ class ConfigurationProperties extends ConfigurationHandler {
      * @return true if the load was successful, false if not.
      */
     public boolean loadURL(URL url) {
+        InputStream is = null;
         try {
-            propertyBundle.load(url.openStream());
+            is = url.openStream();
+            propertyBundle.load(is);
             LOG.log(Level.INFO, "Configuration loaded from {0}", url);
             return true;
         } catch (Exception e) {
             if (canComplain) {
                 LOG.log(Level.WARNING, "Unable to load configuration {0}", url);
             }
-            canComplain = false;
             return false;
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    LOG.log(Level.SEVERE, "Failed to close InputStream", e);
+                }
+            }
         }
     }
 
