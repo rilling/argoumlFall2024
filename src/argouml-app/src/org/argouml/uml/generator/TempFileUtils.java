@@ -65,7 +65,7 @@ public class TempFileUtils {
      */
     public static File createTempDir() {
         try  {
-            Path tempPath = Files.createTempDirectory("");
+            Path tempPath = Files.createTempDirectory("/tmp");
             return tempPath.toFile();
         } catch (IOException ioe) {
             LOG.log(Level.SEVERE, "Error while creating a temporary directory", ioe);
