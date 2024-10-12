@@ -620,9 +620,6 @@ public class Main {
      * @param list The commands, a list of strings.
      */
     public static void performCommands(List<String> list) {
-//        initPreinitialize();
-//        initializeSubsystems(new SimpleTimer(), null);
-//        ArgoFrame.getInstance().setVisible(true);
         performCommandsInternal(list);
     }
 
