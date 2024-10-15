@@ -259,7 +259,6 @@ public class Main {
             }
 
 
-            //ToolTipManager.sharedInstance().setInitialDelay(500);
             ToolTipManager.sharedInstance().setDismissDelay(50000000);
         } catch (Throwable t) {
             try {
@@ -389,8 +388,7 @@ public class Main {
                 }
             } else {
                 if (projectName == null) {
-                    System.out.println(
-                            "Setting projectName to '" + args[i] + "'");
+                    LOG.info("Setting projectName to '" + args[i] + "'");
                     projectName = args[i];
                 }
             }
@@ -621,9 +619,6 @@ public class Main {
      * @param list The commands, a list of strings.
      */
     public static void performCommands(List<String> list) {
-//        initPreinitialize();
-//        initializeSubsystems(new SimpleTimer(), null);
-//        ArgoFrame.getInstance().setVisible(true);
         performCommandsInternal(list);
     }
 
@@ -750,37 +745,6 @@ public class Main {
          * {@link Argo} perform the initialization.
          */
 
-        // JavaWebStart properties for logs are :
-        // deployment.user.logdir & deployment.user.tmp
-//        if (System.getProperty("log4j.configuration") == null) {
-//            Properties props = new Properties();
-//            InputStream stream = null;
-//            try {
-//                stream = Thread.currentThread().getContextClassLoader()
-//                        .getResourceAsStream(DEFAULT_LOGGING_CONFIGURATION);
-//
-//                if (stream != null) {
-//                    props.load(stream);
-//                }
-//            } catch (IOException io) {
-//                io.printStackTrace();
-//                System.exit(-1);
-//            }
-//
-//            PropertyConfigurator.configure(props);
-//
-//            if (stream == null) {
-//                BasicConfigurator.configure();
-//                Logger.getRootLogger().getLoggerRepository().setThreshold(
-//                        Level.ERROR); // default level is DEBUG
-//                Logger.getRootLogger().error(
-//                        "Failed to find valid log4j properties"
-//                        + "in log4j.configuration"
-//                        + "using default logging configuration");
-//            }
-//        }
-
-        // initLogging();
         LOG = Logger.getLogger(Main.class.getName());
     }
 
@@ -909,6 +873,8 @@ class PostLoad implements Runnable {
             Thread.sleep(1000);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "post load no sleep", ex);
+            Thread.currentThread().interrupt();
+            return;
         }
         for (Runnable r : postLoadActions) {
             r.run();
@@ -916,6 +882,8 @@ class PostLoad implements Runnable {
                 Thread.sleep(100);
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "post load no sleep2", ex);
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
