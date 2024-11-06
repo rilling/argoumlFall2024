@@ -90,6 +90,7 @@ public class MetaDataCache {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(filename);
         InputSource inputSource = new InputSource(inputStream);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         DocumentBuilder db = dbf.newDocumentBuilder();
         return db.parse(inputSource);
     }
