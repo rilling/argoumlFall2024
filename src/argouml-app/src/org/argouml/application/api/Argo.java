@@ -70,6 +70,8 @@ public final class Argo {
     @Deprecated
     public static final String ARGOINI = "/org/argouml/argo.ini";
 
+    private static final String KEY_MOSTRECENT = "mostrecent";
+
     /**
      * Key for default startup directory.
      */
@@ -92,13 +94,13 @@ public final class Argo {
      * Key for last saved project URI.
      */
     public static final ConfigurationKey KEY_MOST_RECENT_PROJECT_FILE =
-	Configuration.makeKey("project", "mostrecent", "file");
+	Configuration.makeKey("project", KEY_MOSTRECENT, "file");
 
     /**
      * Key for last generated class/classes directory.
      */
     public static final ConfigurationKey KEY_MOST_RECENT_EXPORT_DIRECTORY =
-        Configuration.makeKey("project", "mostrecent", "exportdirectory");
+        Configuration.makeKey("project", KEY_MOSTRECENT, "exportdirectory");
 
     /**
      * Key to reload last saved project on startup.
@@ -110,7 +112,7 @@ public final class Argo {
      * Key for number of last recently used file entries in menu list.
      */
     public static final ConfigurationKey KEY_NUMBER_LAST_RECENT_USED =
-	Configuration.makeKey("project", "mostrecent", "maxNumber");
+	Configuration.makeKey("project", KEY_MOSTRECENT, "maxNumber");
 
     /**
      * Key for screen top.
