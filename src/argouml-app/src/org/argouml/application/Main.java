@@ -100,13 +100,14 @@ import org.argouml.util.logging.AwtExceptionHandler;
 import org.argouml.util.logging.SimpleTimer;
 
 /**
- * This is the main class for two of the types 
- * of ArgoUML application invocation: 
- * non-GUI command line and Swing GUI.<p>
+ * This is the main class for two of the types
+ * of ArgoUML application invocation:
+ * non-GUI command line and Swing GUI.
+ * <p>
  * 
  * NOTE: Functionality which should be common to all types of application
  * invocation (e.g. extension modules to be loaded) should added to some
- * common class and <b>not</b> here.  Adding things here will cause behavior
+ * common class and <b>not</b> here. Adding things here will cause behavior
  * to diverge for other application invocation types (e.g. ArgoEclipse).
  *
  */
@@ -118,14 +119,12 @@ public class Main {
     /**
      * The location of the default logging configuration (.lcf) file.
      */
-    public static final String DEFAULT_LOGGING_CONFIGURATION =
-        "org/argouml/resource/default.lcf";
+    public static final String DEFAULT_LOGGING_CONFIGURATION = "org/argouml/resource/default.lcf";
 
     /**
      * The default implementation to start.
      */
-    private static final String DEFAULT_MODEL_IMPLEMENTATION =
-        "org.argouml.model.mdr.MDRModelImplementation";
+    private static final String DEFAULT_MODEL_IMPLEMENTATION = "org.argouml.model.mdr.MDRModelImplementation";
 
     private static List<Runnable> postLoadActions = new ArrayList<Runnable>();
 
@@ -146,6 +145,7 @@ public class Main {
 
     /**
      * The main entry point of ArgoUML.
+     * 
      * @param args command line parameters
      */
     public static void main(String[] args) {
@@ -184,7 +184,7 @@ public class Main {
             // Needs to happen after initialization is done & modules loaded
             st.mark("perform commands");
             if (batch) {
-                // TODO: Add an "open most recent project" command so that 
+                // TODO: Add an "open most recent project" command so that
                 // command state can be decoupled from user settings?
                 performCommandsInternal(commands);
                 commands = null;
@@ -200,8 +200,7 @@ public class Main {
 
             File fileToOpen = null;
             if (projectName != null) {
-                projectName =
-                    PersistenceManager.getInstance().fixExtension(projectName);
+                projectName = PersistenceManager.getInstance().fixExtension(projectName);
                 fileToOpen = new File(projectName);
             }
 
@@ -244,20 +243,15 @@ public class Main {
             }
             LOG.log(Level.INFO, "#################################\n");
 
-            st = null;
             ArgoFrame.getFrame().setCursor(
                     Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
             // Andreas: just temporary: a warning dialog for uml2...
             if (showUml2warning
                     && Model.getFacade().getUmlVersion().startsWith("2")) {
-                JOptionPane.showMessageDialog( ArgoFrame.getFrame()
-                        , "You are running an experimental version "
-                        + "not meant for productive work!"
-                        , "UML2 pre-alpha warning"
-                        , JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(ArgoFrame.getFrame(), "You are running an experimental version "
+                        + "not meant for productive work!", "UML2 pre-alpha warning", JOptionPane.WARNING_MESSAGE);
             }
-
 
             ToolTipManager.sharedInstance().setDismissDelay(50000000);
         } catch (Throwable t) {
@@ -268,7 +262,6 @@ public class Main {
             }
         }
     }
-
 
     private static void initPreinitialize() {
         checkJVMVersion();
@@ -289,7 +282,6 @@ public class Main {
         setSystemProperties();
     }
 
-
     private static void initTranslator() {
         // Set the i18n locale
         Translator.init(Configuration.getString(Argo.KEY_LOCALE));
@@ -309,7 +301,6 @@ public class Main {
                 });
     }
 
-
     private static void setSystemProperties() {
         /* set properties for application behaviour */
         System.setProperty("gef.imageLocation", "/org/argouml/Images");
@@ -320,7 +311,6 @@ public class Main {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name",
                 "ArgoUML");
     }
-
 
     /**
      * Parse command line args. The assumption is that all options precede the
@@ -342,8 +332,7 @@ public class Main {
                         .getThemeClassNameFromArg(args[i]);
                 if (themeName != null) {
                     theTheme = themeName;
-                } else if (
-                        args[i].equalsIgnoreCase("-help")
+                } else if (args[i].equalsIgnoreCase("-help")
                         || args[i].equalsIgnoreCase("-h")
                         || args[i].equalsIgnoreCase("--help")
                         || args[i].equalsIgnoreCase("/?")) {
@@ -368,11 +357,10 @@ public class Main {
                     projectName = args[++i];
                 } else if (args[i].equalsIgnoreCase("-print")
                         && i + 1 < args.length) {
-                    // TODO: Huge side effect.  Hoist out of parse - tfm
+                    // TODO: Huge side effect. Hoist out of parse - tfm
                     // let's load the project
-                    String projectToBePrinted =
-                        PersistenceManager.getInstance().fixExtension(
-                                args[++i]);
+                    String projectToBePrinted = PersistenceManager.getInstance().fixExtension(
+                            args[++i]);
                     ProjectBrowser.getInstance().loadProject(
                             new File(projectToBePrinted), true, null);
                     // now, let's print it
@@ -394,7 +382,6 @@ public class Main {
             }
         }
     }
-
 
     private static ProjectBrowser initializeSubsystems(SimpleTimer st,
             SplashScreen splash) {
@@ -443,7 +430,6 @@ public class Main {
         return pb;
     }
 
-
     /**
      * Initialize the UML model repository.
      */
@@ -460,7 +446,6 @@ public class Main {
         }
     }
 
-
     private static void openProject(SimpleTimer st, SplashScreen splash,
             ProjectBrowser pb, File fileToOpen) {
         if (splash != null) {
@@ -474,7 +459,7 @@ public class Main {
         Project project = null;
         if (fileToOpen != null) {
             if (splash != null) {
-                Object[] msgArgs = {projectName};
+                Object[] msgArgs = { projectName };
                 splash.showStatus(
                         Translator.messageFormat(
                                 "statusmsg.bar.readingproject",
@@ -482,7 +467,7 @@ public class Main {
             }
             System.err.println("The file is " + fileToOpen);
             System.err.println("File.exists = " + fileToOpen.exists());
-            project =  pb.loadProject2(fileToOpen, true, null);
+            project = pb.loadProject2(fileToOpen, true, null);
         } else {
             if (splash != null) {
                 splash.showStatus(
@@ -501,7 +486,6 @@ public class Main {
         Designer.enableCritiquing();
     }
 
-
     private static String getMostRecentProject() {
         // If no project was entered on the command line,
         // try to reload the most recent project if that option is true
@@ -519,11 +503,10 @@ public class Main {
         return null;
     }
 
-
     /**
      * Helper to update progress if we have a splash screen displayed.
      *
-     * @param splash <code>true</code> if the splash is to be shown
+     * @param splash  <code>true</code> if the splash is to be shown
      * @param percent the new percentage for progress bar
      * @param message the message to be shown in the splash
      */
@@ -534,7 +517,6 @@ public class Main {
             splash.updateProgress(percent);
         }
     }
-
 
     /**
      * Prints the usage message.
@@ -549,10 +531,12 @@ public class Main {
         System.err.println("  -command <arg>  command to perform on startup");
         System.err.println("  -batch          don't start GUI");
         System.err.println("  -locale <arg>   set the locale (e.g. 'en_GB')");
-        /* TODO: The Quickguide also mentions:
-         *   -open <arg>     open given file on startup
-         *   -print <arg>    print given file on startup (and exit)
-         * Why are these gone? */
+        /*
+         * TODO: The Quickguide also mentions:
+         * -open <arg> open given file on startup
+         * -print <arg> print given file on startup (and exit)
+         * Why are these gone?
+         */
         System.err.println("");
         System.err.println("You can also set java settings which influence "
                 + "the behaviour of ArgoUML:");
@@ -598,7 +582,6 @@ public class Main {
             System.exit(0);
         }
     }
-
 
     /**
      * Add an element to the PostLoadActions list,
@@ -670,7 +653,6 @@ public class Main {
                 continue;
             }
 
-
             if (o == null || !(o instanceof CommandLineInterface)) {
                 System.out.println(commandName
                         + " is not a command - skipping.");
@@ -682,14 +664,18 @@ public class Main {
             System.out.println("Performing command "
                     + commandName + "( "
                     + (commandArgument == null
-                            ? "" : commandArgument) + " )");
+                            ? ""
+                            : commandArgument)
+                    + " )");
             boolean result = clio.doCommand(commandArgument);
             if (!result) {
                 System.out.println("There was an error executing "
                         + "the command "
                         + commandName + "( "
                         + (commandArgument == null
-                                ? "" : commandArgument) + " )");
+                                ? ""
+                                : commandArgument)
+                        + " )");
                 System.out.println("Aborting the rest of the commands.");
                 return;
             }
@@ -734,23 +720,23 @@ public class Main {
                 ArgoAwtExceptionHandler.class.getName());
 
         /*
-         *  The string <code>log4j.configuration</code> is the
-         *  same string found in
-         *  {@link org.apache.log4j.Configuration.DEFAULT_CONFIGURATION_FILE}
-         *  but if we use the reference, then log4j configures itself
-         *  and clears the system property and we never know if it was
-         *  set.
+         * The string <code>log4j.configuration</code> is the
+         * same string found in
+         * {@link org.apache.log4j.Configuration.DEFAULT_CONFIGURATION_FILE}
+         * but if we use the reference, then log4j configures itself
+         * and clears the system property and we never know if it was
+         * set.
          *
-         *  If it is set, then we let the static initializer in
+         * If it is set, then we let the static initializer in
          * {@link Argo} perform the initialization.
          */
 
         LOG = Logger.getLogger(Main.class.getName());
     }
 
-
     /**
      * Create and display a splash screen.
+     * 
      * @return the splash screen
      */
     private static SplashScreen initializeSplash() {
@@ -787,19 +773,16 @@ public class Main {
         pb.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         // Set the screen layout to what the user left it before, or
         // to reasonable defaults.
-        Rectangle scrSize =
-            GraphicsEnvironment.getLocalGraphicsEnvironment()
+        Rectangle scrSize = GraphicsEnvironment.getLocalGraphicsEnvironment()
                 .getMaximumWindowBounds();
 
-        int configFrameWidth =
-            Configuration.getInteger(Argo.KEY_SCREEN_WIDTH, scrSize.width);
+        int configFrameWidth = Configuration.getInteger(Argo.KEY_SCREEN_WIDTH, scrSize.width);
         int w = Math.min(configFrameWidth, scrSize.width);
         if (w == 0) {
             w = 600;
         }
 
-        int configFrameHeight =
-            Configuration.getInteger(Argo.KEY_SCREEN_HEIGHT, scrSize.height);
+        int configFrameHeight = Configuration.getInteger(Argo.KEY_SCREEN_HEIGHT, scrSize.height);
         int h = Math.min(configFrameHeight, scrSize.height);
         if (h == 0) {
             h = 400;
@@ -811,21 +794,22 @@ public class Main {
         pb.setSize(w, h);
         pb.setExtendedState(Configuration.getBoolean(
                 Argo.KEY_SCREEN_MAXIMIZED, false)
-                ? Frame.MAXIMIZED_BOTH : Frame.NORMAL);
+                        ? Frame.MAXIMIZED_BOTH
+                        : Frame.NORMAL);
 
         UIManager.put("Button.focusInputMap", new UIDefaults.LazyInputMap(
                 new Object[] {
-                    "ENTER", "pressed",
-                    "released ENTER", "released",
-                    "SPACE", "pressed",
-                    "released SPACE", "released"
-                })
-        );
+                        "ENTER", "pressed",
+                        "released ENTER", "released",
+                        "SPACE", "pressed",
+                        "released SPACE", "released"
+                }));
         return pb;
     }
 
     /**
-     * Publish the version of the ArgoUML application. <p>
+     * Publish the version of the ArgoUML application.
+     * <p>
      *
      * This function is intentionally public,
      * since applications built on ArgoUML,
@@ -836,7 +820,6 @@ public class Main {
     public static void initVersion() {
         ArgoVersion.init();
     }
-
 
 } /* end Class Main */
 
@@ -854,7 +837,6 @@ class PostLoad implements Runnable {
      * The list of actions to perform.
      */
     private List<Runnable> postLoadActions;
-
 
     /**
      * Constructor.
@@ -898,9 +880,8 @@ class LoadModules implements Runnable {
      */
     private static final Logger LOG = Logger.getLogger(LoadModules.class.getName());
 
-
     private static final String[] OPTIONAL_INTERNAL_MODULES = {
-        "org.argouml.dev.DeveloperModule",
+            "org.argouml.dev.DeveloperModule",
     };
 
     /**
