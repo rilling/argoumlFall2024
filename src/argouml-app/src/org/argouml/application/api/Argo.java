@@ -61,6 +61,8 @@ import org.argouml.configuration.ConfigurationKey;
  */
 public final class Argo {
 
+    private static final String IMPORT = "import";
+
     /**
      * argo.ini path.
      * @deprecated for 0.25.4 by tfmorris.  No longer used.
@@ -231,7 +233,7 @@ public final class Argo {
      * Key for user java reverse engineering classpath.
      */
     public static final ConfigurationKey KEY_USER_IMPORT_CLASSPATH =
-	Configuration.makeKey("import", "clazzpath");
+	Configuration.makeKey(IMPORT, "clazzpath");
 
     /**
      * Key for RE general settings checkbox values.
@@ -243,7 +245,7 @@ public final class Argo {
      * 5. perform automatic diagram layout
      */
     public static final ConfigurationKey KEY_IMPORT_GENERAL_SETTINGS_FLAGS =
-        Configuration.makeKey("import", "general", "flags");
+        Configuration.makeKey(IMPORT, "general", "flags");
 
     /**
      * Key for RE general settings: level of import detail. Values:
@@ -252,20 +254,20 @@ public final class Argo {
      * 2: full import
      */
     public static final ConfigurationKey KEY_IMPORT_GENERAL_DETAIL_LEVEL =
-        Configuration.makeKey("import", "general", "detail", "level");
+        Configuration.makeKey(IMPORT, "general", "detail", "level");
 
     /**
      * Key for input source file encoding used in RE.
      *  Will be used for generated file also.
      */
     public static final ConfigurationKey KEY_INPUT_SOURCE_ENCODING =
-	Configuration.makeKey("import", "file", "encoding");
+	Configuration.makeKey(IMPORT, "file", "encoding");
 
     /**
      * Key to store setting of stripping diagrams on XMI import.
      */
     public static final ConfigurationKey KEY_XMI_STRIP_DIAGRAMS =
-        Configuration.makeKey("import", "xmi", "stripDiagrams");
+        Configuration.makeKey(IMPORT, "xmi", "stripDiagrams");
 
     /**
      * Key to store profile/default model.

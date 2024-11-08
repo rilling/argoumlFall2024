@@ -175,15 +175,18 @@ public class AddToDoItemDialog extends ArgoDialog {
         String headline = headLineTextField.getText();
         int priority = ToDoItem.HIGH_PRIORITY;
         switch (priorityComboBox.getSelectedIndex()) {
-	case 0:
-	    priority = ToDoItem.HIGH_PRIORITY;
-	    break;
-	case 1:
-	    priority = ToDoItem.MED_PRIORITY;
-	    break;
-	case 2:
-	    priority = ToDoItem.LOW_PRIORITY;
-	    break;
+            case 0:
+                priority = ToDoItem.HIGH_PRIORITY;
+                break;
+            case 1:
+                priority = ToDoItem.MED_PRIORITY;
+                break;
+            case 2:
+                priority = ToDoItem.LOW_PRIORITY;
+                break;
+            default:
+                priority = ToDoItem.LOW_PRIORITY; // default to LOW_PRIORITY if index is invalid
+                break;
         }
         String desc = descriptionTextArea.getText();
         String moreInfoURL = moreinfoTextField.getText();

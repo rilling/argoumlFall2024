@@ -146,10 +146,10 @@ abstract class SAXParserBase extends DefaultHandler {
         long start, end;
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(false);
-        factory.setValidating(false);
-
         try {
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setValidating(false);
+
             SAXParser parser = factory.newSAXParser();
 
             // If we weren't given a system ID, attempt to use the URL for the
