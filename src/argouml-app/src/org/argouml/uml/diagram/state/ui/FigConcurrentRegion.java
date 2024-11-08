@@ -316,6 +316,18 @@ public class FigConcurrentRegion extends FigState
         firePropChange("bounds", oldBounds, getBounds());
     }
 
+    private void updateShapeBounds(int x, int y, int w, int h, Dimension nameDim, Rectangle oldBounds) {
+        dividerline.setShape(x, y, x + w , y);
+        getNameFig().setBounds(x + 2, y + 2, w - 4, nameDim.height);
+        getInternal().setBounds(x + 2, y + nameDim.height + 4, w - 4, h - nameDim.height - 8);
+        getBigPort().setBounds(x, y, w, h);
+        cover.setBounds(x, y, w, h);
+
+        calcBounds();
+        updateEdges();
+        firePropChange("bounds", oldBounds, getBounds());
+    }
+
     /**
      * To resize with X and Y increments, absolute width and keeping the height.
      * @param xInc the x increment
@@ -333,16 +345,7 @@ public class FigConcurrentRegion extends FigState
         int y = oldBounds.y + yInc;
         int h = oldBounds.height;
 
-        dividerline.setShape(x, y, x + w , y);
-        getNameFig().setBounds(x + 2, y + 2, w - 4, nameDim.height);
-        getInternal().setBounds(x + 2, y + nameDim.height + 4,
-                w - 4, h - nameDim.height - 8);
-        getBigPort().setBounds(x, y, w, h);
-        cover.setBounds(x, y, w, h);
-
-        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
-        updateEdges();
-        firePropChange("bounds", oldBounds, getBounds());
+        updateShapeBounds(x, y, w, h, nameDim, oldBounds);
     }
 
     /**
@@ -366,17 +369,7 @@ public class FigConcurrentRegion extends FigState
         int y = oldBounds.y + yInc;
         int h = oldBounds.height + hInc;
 
-        dividerline.setShape(x, y,
-                x + w , y);
-        getNameFig().setBounds(x + 2, y + 2, w - 4, nameDim.height);
-        getInternal().setBounds(x + 2, y + nameDim.height + 4,
-                w - 4, h - nameDim.height - 8);
-        getBigPort().setBounds(x, y, w, h);
-        cover.setBounds(x, y, w, h);
-
-        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
-        updateEdges();
-        firePropChange("bounds", oldBounds, getBounds());
+        updateShapeBounds(x, y, w, h, nameDim, oldBounds);
     }
 
     /**
@@ -397,16 +390,7 @@ public class FigConcurrentRegion extends FigState
         int w = oldBounds.width;
         int h = oldBounds.height + hInc;
 
-        dividerline.setShape(x, y, x + w , y);
-        getNameFig().setBounds(x + 2, y + 2, w - 4, nameDim.height);
-        getInternal().setBounds(x + 2, y + nameDim.height + 4,
-                w - 4, h - nameDim.height - 8);
-        getBigPort().setBounds(x, y, w, h);
-        cover.setBounds(x, y, w, h);
-
-        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
-        updateEdges();
-        firePropChange("bounds", oldBounds, getBounds());
+        updateShapeBounds(x, y, w, h, nameDim, oldBounds);
     }
 
     ////////////////////////////////////////////////////////////////
