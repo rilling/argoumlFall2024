@@ -164,25 +164,9 @@ public class CollectionsModelInterpreter implements ModelInterpreter {
                     List<String> vars = (ArrayList<String>) parameters[0];
                     Object exp = parameters[1];
                     LambdaEvaluator eval = (LambdaEvaluator) parameters[2];
+                    Collection<?> col = (Collection<?>) subject;
 
-                    Collection col = (Collection) subject;
-
-                    // TODO is it possible to use more than one variable?
-                    String varName = vars.get(0);
-                    Object oldVal = vt.get(varName);
-
-                    for (Object object : col) {
-                        vt.put(varName, object);
-
-                        Object val = eval.evaluate(vt, exp);
-                        if (val instanceof Boolean && (Boolean) val) {
-                            return true;
-                        }
-                    }
-
-                    vt.put(varName, oldVal);
-
-                    return false;
+                    return evaluateExists(vars, exp, eval, col, vt);
                 } else if (feature.toString().trim().equals("isUnique")) {
                     List<String> vars = (ArrayList<String>) parameters[0];
                     Object exp = parameters[1];
@@ -241,25 +225,9 @@ public class CollectionsModelInterpreter implements ModelInterpreter {
                     List<String> vars = (ArrayList<String>) parameters[0];
                     Object exp = parameters[1];
                     LambdaEvaluator eval = (LambdaEvaluator) parameters[2];
+                    Collection<?> col = (Collection<?>) subject;
 
-                    Collection col = (Collection) subject;
-
-                    // TODO is it possible to use more than one variable?
-                    String varName = vars.get(0);
-                    Object oldVal = vt.get(varName);
-
-                    for (Object object : col) {
-                        vt.put(varName, object);
-
-                        Object val = eval.evaluate(vt, exp);
-                        if (val instanceof Boolean && (Boolean) val) {
-                            return object;
-                        }
-                    }
-
-                    vt.put(varName, oldVal);
-
-                    return null;
+                    return evaluateExists(vars, exp, eval, col, vt);
                 }
 
                 // TODO implement iterate()
@@ -492,5 +460,25 @@ public class CollectionsModelInterpreter implements ModelInterpreter {
     public Object getBuiltInSymbol(String sym) {
         return null;
     }
+    //helper method for refactored code
+    private boolean evaluateExists(List<String> vars, Object exp, LambdaEvaluator eval, Collection<?> col, Map<String, Object> vt) {
+        String varName = vars.get(0);
+        Object oldVal = vt.get(varName);
+
+        try {
+            for (Object object : col) {
+                vt.put(varName, object);
+                Object val = eval.evaluate(vt, exp);
+                if (val instanceof Boolean && (Boolean) val) {
+                    return true;
+                }
+            }
+        } finally {
+            // Restore the original value of the variable in the context
+            vt.put(varName, oldVal);
+        }
+        return false;
+    }
+
 
 }
