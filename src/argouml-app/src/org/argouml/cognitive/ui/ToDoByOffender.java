@@ -52,19 +52,53 @@ import org.argouml.cognitive.ToDoListListener;
  * Represents a perspective for ToDo items: grouping by offender type.
  *
  */
-public class ToDoByOffender extends ToDoPerspective
-        implements ToDoListListener {
+public class ToDoByOffender extends ToDoPerspective implements ToDoListListener {
+    private static final Logger LOG = Logger.getLogger(ToDoByOffender.class.getName());
 
-    private static final Logger LOG =
-        Logger.getLogger(ToDoByOffender.class.getName());
-
-    /**
-     * The constructor.
-     *
-     */
     public ToDoByOffender() {
         super("combobox.todo-perspective-offender");
         addSubTreeModel(new GoListToOffenderToItem());
+    }
+
+    // Added the new helper methods here
+    private void processOffenderItems(Object off, List<ToDoItem> items, Object[] path,
+                                      boolean isForAdd) {
+        int nMatchingItems = 0;
+        synchronized (items) {
+            for (ToDoItem item : items) {
+                ListSet offenders = item.getOffenders();
+                if (!offenders.contains(off)) {
+                    continue;
+                }
+                nMatchingItems++;
+            }
+        }
+
+        if (nMatchingItems == 0) {
+            return;
+        }
+
+        int[] childIndices = new int[nMatchingItems];
+        Object[] children = new Object[nMatchingItems];
+        nMatchingItems = 0;
+
+        synchronized (items) {
+            for (ToDoItem item : items) {
+                ListSet offenders = item.getOffenders();
+                if (!offenders.contains(off)) {
+                    continue;
+                }
+                childIndices[nMatchingItems] = getIndexOfChild(off, item);
+                children[nMatchingItems] = item;
+                nMatchingItems++;
+            }
+        }
+
+        if (isForAdd) {
+            fireTreeNodesInserted(this, path, childIndices, children);
+        } else {
+            fireTreeNodesChanged(this, path, childIndices, children);
+        }
     }
 
     ////////////////////////////////////////////////////////////////
@@ -79,40 +113,11 @@ public class ToDoByOffender extends ToDoPerspective
         Object[] path = new Object[2];
         path[0] = Designer.theDesigner().getToDoList();
 
-        ListSet allOffenders = Designer.theDesigner().getToDoList()
-                .getOffenders();
+        ListSet allOffenders = Designer.theDesigner().getToDoList().getOffenders();
         synchronized (allOffenders) {
             for (Object off : allOffenders) {
                 path[1] = off;
-                int nMatchingItems = 0;
-                synchronized (items) {
-                    for (ToDoItem item : items) {
-                        ListSet offenders = item.getOffenders();
-                        if (!offenders.contains(off)) {
-                            continue;
-                        }
-                        nMatchingItems++;
-                    }
-                }
-                if (nMatchingItems == 0) {
-                    continue;
-                }
-                int[] childIndices = new int[nMatchingItems];
-                Object[] children = new Object[nMatchingItems];
-                nMatchingItems = 0;
-                synchronized (items) {
-                    for (ToDoItem item : items) {
-                        ListSet offenders = item.getOffenders();
-                        if (!offenders.contains(off)) {
-                            continue;
-                        }
-                        childIndices[nMatchingItems] = getIndexOfChild(off,
-                                item);
-                        children[nMatchingItems] = item;
-                        nMatchingItems++;
-                    }
-                }
-                fireTreeNodesChanged(this, path, childIndices, children);
+                processOffenderItems(off, items, path, false);
             }
         }
     }
@@ -126,46 +131,14 @@ public class ToDoByOffender extends ToDoPerspective
         Object[] path = new Object[2];
         path[0] = Designer.theDesigner().getToDoList();
 
-        ListSet allOffenders = Designer.theDesigner().getToDoList()
-                .getOffenders();
+        ListSet allOffenders = Designer.theDesigner().getToDoList().getOffenders();
         synchronized (allOffenders) {
             for (Object off : allOffenders) {
                 path[1] = off;
-                int nMatchingItems = 0;
-                // TODO: This first loop just to count the items appears
-                // redundant to me - tfm 20070630
-                synchronized (items) {
-                    for (ToDoItem item : items) {
-                        ListSet offenders = item.getOffenders();
-                        if (!offenders.contains(off)) {
-                            continue;
-                        }
-                        nMatchingItems++;
-                    }
-                }
-                if (nMatchingItems == 0) {
-                    continue;
-                }
-                int[] childIndices = new int[nMatchingItems];
-                Object[] children = new Object[nMatchingItems];
-                nMatchingItems = 0;
-                synchronized (items) {
-                    for (ToDoItem item : items) {
-                        ListSet offenders = item.getOffenders();
-                        if (!offenders.contains(off)) {
-                            continue;
-                        }
-                        childIndices[nMatchingItems] = getIndexOfChild(off,
-                                item);
-                        children[nMatchingItems] = item;
-                        nMatchingItems++;
-                    }
-                }
-                fireTreeNodesInserted(this, path, childIndices, children);
+                processOffenderItems(off, items, path, true);
             }
         }
     }
-
     /*
      * @see org.argouml.cognitive.ToDoListListener#toDoItemsRemoved(org.argouml.cognitive.ToDoListEvent)
      */
