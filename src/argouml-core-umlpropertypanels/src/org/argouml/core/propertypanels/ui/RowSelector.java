@@ -751,8 +751,8 @@ class RowSelector extends UmlControl
          * Set the action as enabled when any row other then the first is selected
          * @param e the event
          */
-         public void valueChanged(ListSelectionEvent e) {
-            setEnabled(getList().getSelectedIndex() > 0);
+        public void valueChanged(ListSelectionEvent e) {
+            setEnabledBasedOnSelection(getList().getSelectedIndex(), getModel().getSize());
         }
 
          /***
@@ -762,15 +762,24 @@ class RowSelector extends UmlControl
         @Override
         public void actionPerformed(ActionEvent e) {
             super.actionPerformed(e);
-            movedModelElement.setElement(getList().getSelectedValues()[0]);
-            assert (movedModelElement != null);
-            Model.getUmlHelper().move(
-                    target,
-                    movedModelElement.getElement(),
-                    UmlHelper.Direction.UP);
+            moveElementInDirection(UmlHelper.Direction.UP);
         }
+
     }
 
+    private void setEnabledBasedOnSelection(int selectedIndex, int modelSize) {
+        setEnabled(selectedIndex > -1 && selectedIndex < modelSize - 1);
+    }
+
+    private void moveElementInDirection(UmlHelper.Direction direction) {
+        movedModelElement.setElement(getList().getSelectedValues()[0]);
+        assert (movedModelElement != null);
+        Model.getUmlHelper().move(
+                target,
+                movedModelElement.getElement(),
+                direction
+        );
+    }
 
     /**
      * This action deletes the model elements that are selected in the JList
@@ -797,9 +806,9 @@ class RowSelector extends UmlControl
          * @param e the event
          */
         public void valueChanged(ListSelectionEvent e) {
-            final int index = getList().getSelectedIndex();
-            setEnabled(index > -1 && index < getModel().getSize() - 1);
+            setEnabledBasedOnSelection(getList().getSelectedIndex(), getModel().getSize());
         }
+
 
         /***
          * Perform the action
@@ -808,13 +817,9 @@ class RowSelector extends UmlControl
         @Override
         public void actionPerformed(ActionEvent e) {
             super.actionPerformed(e);
-            movedModelElement.setElement(getList().getSelectedValues()[0]);
-            assert (movedModelElement != null);
-            Model.getUmlHelper().move(
-                    target,
-                    movedModelElement.getElement(),
-                    UmlHelper.Direction.DOWN);
+            moveElementInDirection(UmlHelper.Direction.DOWN);
         }
+
     }
 
 
@@ -843,7 +848,7 @@ class RowSelector extends UmlControl
          * @param e the event
          */
         public void valueChanged(ListSelectionEvent e) {
-            setEnabled(getList().getSelectedIndex() > 0);
+            setEnabledBasedOnSelection(getList().getSelectedIndex(), getModel().getSize());
         }
 
         /***
@@ -853,12 +858,7 @@ class RowSelector extends UmlControl
         @Override
         public void actionPerformed(ActionEvent e) {
             super.actionPerformed(e);
-            movedModelElement.setElement(getList().getSelectedValues()[0]);
-            assert (movedModelElement != null);
-            Model.getUmlHelper().move(
-                    target,
-                    movedModelElement.getElement(),
-                    UmlHelper.Direction.TOP);
+            moveElementInDirection(UmlHelper.Direction.TOP);
         }
     }
 
@@ -888,8 +888,7 @@ class RowSelector extends UmlControl
          * @param e the event
          */
         public void valueChanged(ListSelectionEvent e) {
-            final int index = getList().getSelectedIndex();
-            setEnabled(index > -1 && index < getModel().getSize() - 1);
+            setEnabledBasedOnSelection(getList().getSelectedIndex(), getModel().getSize());
         }
 
         /***
@@ -899,12 +898,7 @@ class RowSelector extends UmlControl
         @Override
         public void actionPerformed(ActionEvent e) {
             super.actionPerformed(e);
-            movedModelElement.setElement(getList().getSelectedValues()[0]);
-            assert (movedModelElement != null);
-            Model.getUmlHelper().move(
-                    target,
-                    movedModelElement.getElement(),
-                    UmlHelper.Direction.BOTTOM);
+            moveElementInDirection(UmlHelper.Direction.BOTTOM);
         }
     }
 
