@@ -67,13 +67,13 @@ public class CrUML extends Critic {
      * Logger.
      */
     private static final Logger LOG =
-        Logger.getLogger(CrUML.class.getName());
+            Logger.getLogger(CrUML.class.getName());
 
-   /**
-    * By default looks for the localized strings at the <code>critics</code>
-    * Resource, but critics defined elsewhere (out of ArgoUML main tree)
-    * may override this parameter
-    */
+    /**
+     * By default looks for the localized strings at the <code>critics</code>
+     * Resource, but critics defined elsewhere (out of ArgoUML main tree)
+     * may override this parameter
+     */
     private String localizationPrefix = "critics";
 
     /**
@@ -158,7 +158,7 @@ public class CrUML extends Critic {
      */
     //@Override
     //public final void setHeadline(String s) {
-        //setupHeadAndDesc();
+    //setupHeadAndDesc();
     //}
 
     /**
@@ -194,7 +194,7 @@ public class CrUML extends Critic {
      * @return boolean problem found
      */
     public boolean predicate2(Object dm, Designer dsgr) {
-	return super.predicate(dm, dsgr);
+        return super.predicate(dm, dsgr);
     }
 
     ////////////////////////////////////////////////////////////////
@@ -214,8 +214,8 @@ public class CrUML extends Critic {
     public String expand(String res, ListSet offs) {
 
         if (offs.size() == 0) {
-	    return res;
-	}
+            return res;
+        }
 
         Object off1 = offs.get(0);
 
@@ -238,7 +238,7 @@ public class CrUML extends Critic {
             String evalStr = null;
             try {
                 evalStr =
-		    CriticOclEvaluator.getInstance().evalToString(off1, expr);
+                        CriticOclEvaluator.getInstance().evalToString(off1, expr);
             } catch (ExpansionException e) {
                 // Really ought to have a CriticException to throw here.
                 LOG.log(Level.SEVERE, "Failed to evaluate critic expression", e);
@@ -263,7 +263,7 @@ public class CrUML extends Critic {
      */
     @Override
     public ToDoItem toDoItem(Object dm, Designer dsgr) {
-	return new UMLToDoItem(this, dm, dsgr);
+        return new UMLToDoItem(this, dm, dsgr);
     }
 
     /**
@@ -282,4 +282,10 @@ public class CrUML extends Critic {
      * The UID.
      */
     private static final long serialVersionUID = 1785043010468681602L;
+    // Utility method for checking if a name is missing
+    boolean isNameMissing(Object element) {
+        String myName = Model.getFacade().getName(element);
+        return (myName == null || myName.equals("") || myName.length() == 0);
+    }
+
 }
