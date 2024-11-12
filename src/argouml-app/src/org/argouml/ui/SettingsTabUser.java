@@ -89,23 +89,13 @@ class SettingsTabUser extends JPanel
 
     private void buildPanel() {
         setLayout(new BorderLayout());
-        
+
         topPanel = new JPanel();
         topPanel.setLayout(new BorderLayout());
-        
-        JPanel warning = new JPanel();
-        warning.setLayout(new BoxLayout(warning, BoxLayout.PAGE_AXIS));
-        JLabel warningLabel = new JLabel(Translator.localize("label.warning"));
-        warningLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        warning.add(warningLabel);
 
-        JLinkButton projectSettings = new JLinkButton();
-        projectSettings.setAction(new ActionProjectSettings());
-        projectSettings.setText(Translator.localize("button.project-settings"));
-        projectSettings.setIcon(null);
-        projectSettings.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        warning.add(projectSettings);
-        
+        // The refactored WarningPanel
+        JPanel warning = new WarningPanel();
+
         topPanel.add(warning, BorderLayout.NORTH);
         
 	JPanel settings = new JPanel();
