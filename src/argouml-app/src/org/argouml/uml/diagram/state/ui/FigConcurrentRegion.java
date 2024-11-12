@@ -215,6 +215,16 @@ public class FigConcurrentRegion extends FigState
         return true;
     }
 
+    private void updateBounds(int x, int y, int w, int h, Rectangle oldBounds) {
+        dividerline.setShape(x, y, x + w, y);
+        getNameFig().setBounds(x + MARGIN, y + SPACE_TOP, w - 2 * MARGIN, getNameFig().getMinimumSize().height);
+        getInternal().setBounds(x + MARGIN, y + getNameFig().getMinimumSize().height + SPACE_TOP + SPACE_MIDDLE,
+                w - 2 * MARGIN, h - getNameFig().getMinimumSize().height - SPACE_TOP - SPACE_MIDDLE - SPACE_BOTTOM);
+        getBigPort().setBounds(x, y, w, h);
+        cover.setBounds(x, y, w, h);
+        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
+        updateEdges();
+    }
     /**
      * Override setBounds to keep shapes looking right. <p>
      *
@@ -233,6 +243,7 @@ public class FigConcurrentRegion extends FigState
         int adjacentindex = -1;
         List regionsList = null;
         int index = 0;
+
         if (getEnclosingFig() != null) {
             x = oldBounds.x;
             w = oldBounds.width;
@@ -240,17 +251,10 @@ public class FigConcurrentRegion extends FigState
             regionsList = f.getEnclosedFigs();
             index = regionsList.indexOf(this);
 
-            /* if curHandle.index is 0 or 2,
-             * the adjacent region is the previous region
-             * but if it is 5 or 7, the adjacent region is the next region.
-             * curHandle.index show which corner of the bound we are dragging.
-             */
-            if (((curHandle.index == 0) || (curHandle.index == 2))
-                    && index > 0) {
+            if (((curHandle.index == 0) || (curHandle.index == 2)) && index > 0) {
                 adjacentindex = index - 1;
             }
-            if (((curHandle.index == 5) || (curHandle.index == 7))
-                    && (index < (regionsList.size() - 1))) {
+            if (((curHandle.index == 5) || (curHandle.index == 7)) && (index < (regionsList.size() - 1))) {
                 adjacentindex = index + 1;
             }
             if (h <= getMinimumSize().height) {
@@ -260,61 +264,36 @@ public class FigConcurrentRegion extends FigState
                 }
             }
 
-            /* We aren't able to resize neither the top bound
-             * from the first region nor
-             * the bottom bound from the last region.
-             */
-
             if (adjacentindex == -1) {
                 x = oldBounds.x;
                 y = oldBounds.y;
                 h = oldBounds.height;
 
-                /*The group must be resized if a text field exceed the bounds*/
                 if (w > f.getBounds().width) {
                     Rectangle fR = f.getBounds();
                     f.setBounds(fR.x, fR.y, w + 6, fR.height);
                 }
             } else {
                 int hIncrement = oldBounds.height - h;
-                FigConcurrentRegion adjacentFig =
-                    ((FigConcurrentRegion)
-                        regionsList.get(adjacentindex));
-                if ((adjacentFig.getBounds().height + hIncrement)
-                        <= adjacentFig.getMinimumSize().height) {
+                FigConcurrentRegion adjacentFig = ((FigConcurrentRegion) regionsList.get(adjacentindex));
+                if ((adjacentFig.getBounds().height + hIncrement) <= adjacentFig.getMinimumSize().height) {
                     y = oldBounds.y;
                     h = oldBounds.height;
                 } else {
                     if ((curHandle.index == 0) || (curHandle.index == 2)) {
-                        ((FigConcurrentRegion) regionsList.
-                            get(adjacentindex)).setBounds(0, hIncrement);
+                        ((FigConcurrentRegion) regionsList.get(adjacentindex)).setBounds(0, hIncrement);
                     }
                     if ((curHandle.index == 5) || (curHandle.index == 7)) {
-                        ((FigConcurrentRegion) regionsList.
-                            get(adjacentindex)).setBounds(-hIncrement,
-                                    hIncrement);
+                        ((FigConcurrentRegion) regionsList.get(adjacentindex)).setBounds(-hIncrement, hIncrement);
                     }
                 }
             }
         }
 
-        dividerline.setShape(x, y, x + w, y);
-        getNameFig().setBounds(x + MARGIN,
-                y + SPACE_TOP,
-                w - 2 * MARGIN,
-                nameDim.height);
-        getInternal().setBounds(
-                x + MARGIN,
-                y + nameDim.height + SPACE_TOP + SPACE_MIDDLE,
-                w - 2 * MARGIN,
-                h - nameDim.height - SPACE_TOP - SPACE_MIDDLE - SPACE_BOTTOM);
-        getBigPort().setBounds(x, y, w, h);
-        cover.setBounds(x, y, w, h);
-
-        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
-        updateEdges();
+        updateBounds(x, y, w, h, oldBounds);  // Replaced duplicated code with a call to updateBounds
         firePropChange("bounds", oldBounds, getBounds());
     }
+
 
     /**
      * To resize with X and Y increments, absolute width and keeping the height.
@@ -333,17 +312,10 @@ public class FigConcurrentRegion extends FigState
         int y = oldBounds.y + yInc;
         int h = oldBounds.height;
 
-        dividerline.setShape(x, y, x + w , y);
-        getNameFig().setBounds(x + 2, y + 2, w - 4, nameDim.height);
-        getInternal().setBounds(x + 2, y + nameDim.height + 4,
-                w - 4, h - nameDim.height - 8);
-        getBigPort().setBounds(x, y, w, h);
-        cover.setBounds(x, y, w, h);
-
-        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
-        updateEdges();
+        updateBounds(x, y, w, h, oldBounds);  // Replaced duplicated code with a call to updateBounds
         firePropChange("bounds", oldBounds, getBounds());
     }
+
 
     /**
      * To resize with X, Y and height increments and absolute width.
