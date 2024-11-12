@@ -51,6 +51,7 @@ import org.argouml.cognitive.ToDoListListener;
  * Represents a perspective for ToDo items: grouping by priority.
  *
  */
+
 public class ToDoByPriority extends ToDoPerspective
     implements ToDoListListener {
     private static final Logger LOG =
@@ -73,14 +74,27 @@ public class ToDoByPriority extends ToDoPerspective
      */
     public void toDoItemsChanged(ToDoListEvent tde) {
         LOG.log(Level.FINE, "toDoItemChanged");
+        processToDoItemsByPriority(tde, false);  // false for "changed" event
+    }
+
+    /*
+     * @see org.argouml.cognitive.ToDoListListener#toDoItemsAdded(org.argouml.cognitive.ToDoListEvent)
+     */
+    public void toDoItemsAdded(ToDoListEvent tde) {
+        LOG.log(Level.FINE, "toDoItemAdded");
+        processToDoItemsByPriority(tde, true);  // true for "added" event
+
+    }
+    //new method created to remove cloning
+    private void processToDoItemsByPriority(ToDoListEvent tde, boolean isAddEvent) {
         List<ToDoItem> items = tde.getToDoItemList();
-	Object[] path = new Object[2];
-	path[0] = Designer.theDesigner().getToDoList();
+        Object[] path = new Object[2];
+        path[0] = Designer.theDesigner().getToDoList();
 
         for (PriorityNode pn : PriorityNode.getPriorityList()) {
-	    path[1] = pn;
-	    int nMatchingItems = 0;
-	    synchronized (items) {
+            path[1] = pn;
+            int nMatchingItems = 0;
+            synchronized (items) {
                 for (ToDoItem item : items) {
                     if (item.getPriority() != pn.getPriority()) {
                         continue;
@@ -88,12 +102,12 @@ public class ToDoByPriority extends ToDoPerspective
                     nMatchingItems++;
                 }
             }
-	    if (nMatchingItems == 0) {
+            if (nMatchingItems == 0) {
                 continue;
             }
-	    int[] childIndices = new int[nMatchingItems];
-	    Object[] children = new Object[nMatchingItems];
-	    nMatchingItems = 0;
+            int[] childIndices = new int[nMatchingItems];
+            Object[] children = new Object[nMatchingItems];
+            nMatchingItems = 0;
             synchronized (items) {
                 for (ToDoItem item : items) {
                     if (item.getPriority() != pn.getPriority()) {
@@ -104,49 +118,16 @@ public class ToDoByPriority extends ToDoPerspective
                     nMatchingItems++;
                 }
             }
-	    fireTreeNodesChanged(this, path, childIndices, children);
-	}
+
+            // Call the appropriate method based on the event type
+            if (isAddEvent) {
+                fireTreeNodesInserted(this, path, childIndices, children);
+            } else {
+                fireTreeNodesChanged(this, path, childIndices, children);
+            }
+        }
     }
 
-    /*
-     * @see org.argouml.cognitive.ToDoListListener#toDoItemsAdded(org.argouml.cognitive.ToDoListEvent)
-     */
-    public void toDoItemsAdded(ToDoListEvent tde) {
-        LOG.log(Level.FINE, "toDoItemAdded");
-	List<ToDoItem> items = tde.getToDoItemList();
-	Object[] path = new Object[2];
-	path[0] = Designer.theDesigner().getToDoList();
-
-        for (PriorityNode pn : PriorityNode.getPriorityList()) {
-	    path[1] = pn;
-	    int nMatchingItems = 0;
-	    synchronized (items) {
-                for (ToDoItem item : items) {
-                    if (item.getPriority() != pn.getPriority()) {
-                        continue;
-                    }
-                    nMatchingItems++;
-                }
-            }
-	    if (nMatchingItems == 0) {
-                continue;
-            }
-	    int[] childIndices = new int[nMatchingItems];
-	    Object[] children = new Object[nMatchingItems];
-	    nMatchingItems = 0;
-	    synchronized (items) {
-                for (ToDoItem item : items) {
-                    if (item.getPriority() != pn.getPriority()) {
-                        continue;
-                    }
-                    childIndices[nMatchingItems] = getIndexOfChild(pn, item);
-                    children[nMatchingItems] = item;
-                    nMatchingItems++;
-                }
-            }
-	    fireTreeNodesInserted(this, path, childIndices, children);
-	}
-    }
 
     /*
      * @see org.argouml.cognitive.ToDoListListener#toDoItemsRemoved(org.argouml.cognitive.ToDoListEvent)
@@ -184,3 +165,5 @@ public class ToDoByPriority extends ToDoPerspective
     public void toDoListChanged(ToDoListEvent tde) { }
 
 }
+
+
