@@ -470,7 +470,7 @@ class RowSelector extends UmlControl
     public void mouseExited(MouseEvent e) {
     }
 
-    public void mousePressed(MouseEvent e) {
+    private void showPopupIfNeeded(MouseEvent e) {
         if (e.isPopupTrigger()) {
             JPopupMenu popup = new JPopupMenu();
             for (Object action : actions) {
@@ -491,25 +491,12 @@ class RowSelector extends UmlControl
         }
     }
 
+    public void mousePressed(MouseEvent e) {
+        showPopupIfNeeded(e);
+    }
+
     public void mouseReleased(MouseEvent e) {
-        if (e.isPopupTrigger()) {
-            JPopupMenu popup = new JPopupMenu();
-            for (Object action : actions) {
-                if (action instanceof Action) {
-                    popup.add((Action) action);
-                }
-            }
-            if (moveTopAction != null) {
-                popup.add(moveTopAction);
-                popup.add(moveBottomAction);
-                popup.add(moveUpAction);
-                popup.add(moveDownAction);
-            }
-            if (popup.getComponentCount() > 0) {
-                popup.show(this, e.getX(), e.getY());
-            }
-            e.consume();
-        }
+        showPopupIfNeeded(e);
     }
 
     public void setExpanded(boolean expanded) {
