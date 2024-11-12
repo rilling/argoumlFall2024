@@ -272,6 +272,7 @@ public class CrUML extends Critic {
      * @return the name of the current class without any leading packages
      */
     private final String getClassSimpleName() {
+
         // TODO: This method can be replaced by getClass().getSimpleName()
         // when Argo drops support for Java versions < 1.5
         String className = getClass().getName();
