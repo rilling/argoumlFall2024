@@ -49,6 +49,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.border.EtchedBorder;
 
+import org.argouml.cognitive.LayoutHelper;
 import org.argouml.cognitive.critics.Wizard;
 import org.argouml.swingext.SpacerPanel;
 
@@ -98,30 +99,40 @@ public class WizStepChoice extends WizStep {
 	//image.setMargin(new Insets(0, 0, 0, 0));
 	image.setIcon(getWizardIcon());
 	image.setBorder(null);
-	c.gridx = 0;
-	c.gridheight = GridBagConstraints.REMAINDER;
-	c.gridy = 0;
-	c.anchor = GridBagConstraints.NORTH;
-	gb.setConstraints(image, c);
-	getMainPanel().add(image);
 
-	c.weightx = 1.0;
-	c.gridx = 2;
-	c.gridheight = 1;
-	c.gridwidth = 3;
-	c.gridy = 0;
-	c.fill = GridBagConstraints.HORIZONTAL;
-	gb.setConstraints(instructions, c);
-	getMainPanel().add(instructions);
+	LayoutHelper.addComponent(getMainPanel(), image, gb, c, 0, 0, GridBagConstraints.REMAINDER, 1, 1.0, GridBagConstraints.NORTH);
 
-	c.gridx = 1;
-	c.gridy = 1;
-	c.weightx = 0.0;
-	c.gridwidth = 1;
-	c.fill = GridBagConstraints.NONE;
+	// Use LayoutHelper to add instructions
+	LayoutHelper.addComponent(getMainPanel(), instructions, gb, c, 2, 0, 3, 1, 1.0, GridBagConstraints.HORIZONTAL);
+
+	// Use LayoutHelper to add spacer
 	SpacerPanel spacer = new SpacerPanel();
-	gb.setConstraints(spacer, c);
-	getMainPanel().add(spacer);
+	LayoutHelper.addComponent(getMainPanel(), spacer, gb, c, 1, 1, 1, 1, 0.0, GridBagConstraints.NONE);
+
+//	c.gridx = 0;
+//	c.gridheight = GridBagConstraints.REMAINDER;
+//	c.gridy = 0;
+//	c.anchor = GridBagConstraints.NORTH;
+//	gb.setConstraints(image, c);
+//	getMainPanel().add(image);
+//
+//	c.weightx = 1.0;
+//	c.gridx = 2;
+//	c.gridheight = 1;
+//	c.gridwidth = 3;
+//	c.gridy = 0;
+//	c.fill = GridBagConstraints.HORIZONTAL;
+//	gb.setConstraints(instructions, c);
+//	getMainPanel().add(instructions);
+//
+//	c.gridx = 1;
+//	c.gridy = 1;
+//	c.weightx = 0.0;
+//	c.gridwidth = 1;
+//	c.fill = GridBagConstraints.NONE;
+//	SpacerPanel spacer = new SpacerPanel();
+//	gb.setConstraints(spacer, c);
+//	getMainPanel().add(spacer);
 
 	c.gridx = 2;
 	c.weightx = 1.0;
