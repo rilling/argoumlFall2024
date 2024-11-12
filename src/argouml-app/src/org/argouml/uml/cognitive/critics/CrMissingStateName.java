@@ -59,7 +59,6 @@ class CrMissingClassName extends CrUML {
      * The constructor.
      */
     public CrMissingClassName() {
-
         setupHeadAndDesc();
         addSupportedDecision(UMLDecision.NAMING);
         setKnowledgeTypes(Critic.KT_COMPLETENESS, Critic.KT_SYNTAX);
