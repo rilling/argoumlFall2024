@@ -85,6 +85,10 @@ import tudresden.ocl.parser.node.TName;
 public class TabConstraints extends AbstractArgoJPanel
     implements TabModelTarget, ComponentListener {
 
+    private enum ConstraintChangeType {
+        CONSTRAINT_ADDED, CONSTRAINT_REMOVED ,DATA_CHANGED, NAME_CHANGED
+    }
+
     private static final Logger LOG =
         Logger.getLogger(TabConstraints.class.getName());
 
@@ -698,61 +702,43 @@ public class TabConstraints extends AbstractArgoJPanel
             }
         }
 
-        protected void fireConstraintDataChanged(
-                         int nIdx,
-                         Object mcOld,
-                         Object mcNew) {
-            // Guaranteed to return a non-null array
-            Object[] listeners = theMEllListeners.getListenerList();
+        protected void fireConstraintChanged(
+                int nIdx,
+                Object mcOld,
+                Object mcNew,
+                ConstraintChangeType changeType) {
 
+            Object[] listeners = theMEllListeners.getListenerList();
             ConstraintChangeEvent cce = null;
 
-            // Process the listeners last to first, notifying
-            // those that are interested in this event
             for (int i = listeners.length - 2; i >= 0; i -= 2) {
                 if (listeners[i] == ConstraintChangeListener.class) {
-                    // Lazily create the event:
                     if (cce == null) {
                         cce = new ConstraintChangeEvent(
-                            this,
-                            nIdx,
-                            new CR(mcOld, nIdx),
-                            new CR(mcNew, nIdx));
+                                this,
+                                nIdx,
+                                new CR(mcOld, nIdx),
+                                new CR(mcNew, nIdx));
                     }
-
-                    ((ConstraintChangeListener) listeners[i + 1])
-                        .constraintDataChanged(cce);
+                    ConstraintChangeListener listener = (ConstraintChangeListener) listeners[i + 1];
+                    if (changeType == ConstraintChangeType.DATA_CHANGED) {
+                        listener.constraintDataChanged(cce);
+                    } else if (changeType == ConstraintChangeType.NAME_CHANGED) {
+                        listener.constraintNameChanged(cce);
+                    }
                 }
             }
         }
 
-        protected void fireConstraintNameChanged(
-                         int nIdx,
-                         Object mcOld,
-                         Object mcNew) {
-            // Guaranteed to return a non-null array
-            Object[] listeners = theMEllListeners.getListenerList();
-
-            ConstraintChangeEvent cce = null;
-
-            // Process the listeners last to first, notifying
-            // those that are interested in this event
-            for (int i = listeners.length - 2; i >= 0; i -= 2) {
-                if (listeners[i] == ConstraintChangeListener.class) {
-                    // Lazily create the event:
-                    if (cce == null) {
-                        cce = new ConstraintChangeEvent(
-                            this,
-                            nIdx,
-                            new CR(mcOld, nIdx),
-                            new CR(mcNew, nIdx));
-                    }
-
-                    ((ConstraintChangeListener) listeners[i + 1])
-                        .constraintNameChanged(cce);
-                }
-            }
+        // Original methods now call fireConstraintChanged with the appropriate type
+        protected void fireConstraintDataChanged(int nIdx, Object mcOld, Object mcNew) {
+            fireConstraintChanged(nIdx, mcOld, mcNew, ConstraintChangeType.DATA_CHANGED);
         }
+
+        protected void fireConstraintNameChanged(int nIdx, Object mcOld, Object mcNew) {
+            fireConstraintChanged(nIdx, mcOld, mcNew, ConstraintChangeType.NAME_CHANGED);
+        }
+
     }
 
     /*
