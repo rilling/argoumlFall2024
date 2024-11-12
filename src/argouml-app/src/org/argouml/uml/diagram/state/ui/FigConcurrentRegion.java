@@ -95,8 +95,7 @@ public class FigConcurrentRegion extends FigState
     private static Handle curHandle = new Handle(-1);
 
     private void initialize() {
-        cover =
-            new FigRect(getInitialX(),
+        cover = new FigRect(getInitialX(),
                 getInitialY(),
                 getInitialWidth(), getInitialHeight(),
                 INVISIBLE_LINE_COLOR, FILL_COLOR);
@@ -122,27 +121,28 @@ public class FigConcurrentRegion extends FigState
     /**
      * Construct a new concurrent region fig.
      * 
-     * @param node owning UML element
-     * @param bounds position and size
+     * @param node     owning UML element
+     * @param bounds   position and size
      * @param settings render settings
      */
-    public FigConcurrentRegion(Object node, Rectangle bounds, DiagramSettings
-            settings) {
+    public FigConcurrentRegion(Object node, Rectangle bounds, DiagramSettings settings) {
         super(node, bounds, settings);
         initialize();
         if (bounds != null) {
-            /* We have to use the specific methods written for this Fig: 
-             * This fixes issue 5070. */
-            setBounds(bounds.x - _x, bounds.y - _y, bounds.width, 
+            /*
+             * We have to use the specific methods written for this Fig:
+             * This fixes issue 5070.
+             */
+            setBounds(bounds.x - _x, bounds.y - _y, bounds.width,
                     bounds.height - _h, true);
         }
         updateNameText();
     }
 
     /**
-     * The moment we add this fig to a layer, 
+     * The moment we add this fig to a layer,
      * especially during load,
-     * it needs to be made aware that it 
+     * it needs to be made aware that it
      * is enclosed by a FigCompositeState.
      * This fixes issue 3736.
      * 
@@ -154,15 +154,14 @@ public class FigConcurrentRegion extends FigState
         super.setLayer(lay);
         for (Fig f : lay.getContents()) {
             if (f instanceof FigCompositeState) {
-                if (f.getOwner() 
-                        == Model.getFacade().getContainer(getOwner())) {
+                if (f.getOwner() == Model.getFacade().getContainer(getOwner())) {
                     setEnclosingFig(f);
                     break; // there can only be one
                 }
             }
         }
     }
-    
+
     /*
      * @see java.lang.Object#clone()
      */
@@ -179,7 +178,8 @@ public class FigConcurrentRegion extends FigState
     }
 
     /*
-     * @see org.tigris.gef.ui.PopupGenerator#getPopUpActions(java.awt.event.MouseEvent)
+     * @see
+     * org.tigris.gef.ui.PopupGenerator#getPopUpActions(java.awt.event.MouseEvent)
      */
     @Override
     public Vector getPopUpActions(MouseEvent me) {
@@ -193,7 +193,6 @@ public class FigConcurrentRegion extends FigState
                 new ActionAddConcurrentRegion());
         return popUpActions;
     }
-
 
     /*
      * @see org.tigris.gef.presentation.Fig#getMinimumSize()
@@ -215,8 +214,20 @@ public class FigConcurrentRegion extends FigState
         return true;
     }
 
+    private void updateBounds(int x, int y, int w, int h, Rectangle oldBounds) {
+        dividerline.setShape(x, y, x + w, y);
+        getNameFig().setBounds(x + MARGIN, y + SPACE_TOP, w - 2 * MARGIN, getNameFig().getMinimumSize().height);
+        getInternal().setBounds(x + MARGIN, y + getNameFig().getMinimumSize().height + SPACE_TOP + SPACE_MIDDLE,
+                w - 2 * MARGIN, h - getNameFig().getMinimumSize().height - SPACE_TOP - SPACE_MIDDLE - SPACE_BOTTOM);
+        getBigPort().setBounds(x, y, w, h);
+        cover.setBounds(x, y, w, h);
+        calcBounds(); // _x = x; _y = y; _w = w; _h = h;
+        updateEdges();
+    }
+
     /**
-     * Override setBounds to keep shapes looking right. <p>
+     * Override setBounds to keep shapes looking right.
+     * <p>
      *
      * When resized by this way, it only changes the height and the
      * adjacent region's height.
@@ -233,6 +244,7 @@ public class FigConcurrentRegion extends FigState
         int adjacentindex = -1;
         List regionsList = null;
         int index = 0;
+
         if (getEnclosingFig() != null) {
             x = oldBounds.x;
             w = oldBounds.width;
@@ -240,17 +252,10 @@ public class FigConcurrentRegion extends FigState
             regionsList = f.getEnclosedFigs();
             index = regionsList.indexOf(this);
 
-            /* if curHandle.index is 0 or 2,
-             * the adjacent region is the previous region
-             * but if it is 5 or 7, the adjacent region is the next region.
-             * curHandle.index show which corner of the bound we are dragging.
-             */
-            if (((curHandle.index == 0) || (curHandle.index == 2))
-                    && index > 0) {
+            if (((curHandle.index == 0) || (curHandle.index == 2)) && index > 0) {
                 adjacentindex = index - 1;
             }
-            if (((curHandle.index == 5) || (curHandle.index == 7))
-                    && (index < (regionsList.size() - 1))) {
+            if (((curHandle.index == 5) || (curHandle.index == 7)) && (index < (regionsList.size() - 1))) {
                 adjacentindex = index + 1;
             }
             if (h <= getMinimumSize().height) {
@@ -260,64 +265,38 @@ public class FigConcurrentRegion extends FigState
                 }
             }
 
-            /* We aren't able to resize neither the top bound
-             * from the first region nor
-             * the bottom bound from the last region.
-             */
-
             if (adjacentindex == -1) {
                 x = oldBounds.x;
                 y = oldBounds.y;
                 h = oldBounds.height;
 
-                /*The group must be resized if a text field exceed the bounds*/
                 if (w > f.getBounds().width) {
                     Rectangle fR = f.getBounds();
                     f.setBounds(fR.x, fR.y, w + 6, fR.height);
                 }
             } else {
                 int hIncrement = oldBounds.height - h;
-                FigConcurrentRegion adjacentFig =
-                    ((FigConcurrentRegion)
-                        regionsList.get(adjacentindex));
-                if ((adjacentFig.getBounds().height + hIncrement)
-                        <= adjacentFig.getMinimumSize().height) {
+                FigConcurrentRegion adjacentFig = ((FigConcurrentRegion) regionsList.get(adjacentindex));
+                if ((adjacentFig.getBounds().height + hIncrement) <= adjacentFig.getMinimumSize().height) {
                     y = oldBounds.y;
                     h = oldBounds.height;
                 } else {
                     if ((curHandle.index == 0) || (curHandle.index == 2)) {
-                        ((FigConcurrentRegion) regionsList.
-                            get(adjacentindex)).setBounds(0, hIncrement);
+                        ((FigConcurrentRegion) regionsList.get(adjacentindex)).setBounds(0, hIncrement);
                     }
                     if ((curHandle.index == 5) || (curHandle.index == 7)) {
-                        ((FigConcurrentRegion) regionsList.
-                            get(adjacentindex)).setBounds(-hIncrement,
-                                    hIncrement);
+                        ((FigConcurrentRegion) regionsList.get(adjacentindex)).setBounds(-hIncrement, hIncrement);
                     }
                 }
             }
         }
 
-        dividerline.setShape(x, y, x + w, y);
-        getNameFig().setBounds(x + MARGIN,
-                y + SPACE_TOP,
-                w - 2 * MARGIN,
-                nameDim.height);
-        getInternal().setBounds(
-                x + MARGIN,
-                y + nameDim.height + SPACE_TOP + SPACE_MIDDLE,
-                w - 2 * MARGIN,
-                h - nameDim.height - SPACE_TOP - SPACE_MIDDLE - SPACE_BOTTOM);
-        getBigPort().setBounds(x, y, w, h);
-        cover.setBounds(x, y, w, h);
-
-        calcBounds(); //_x = x; _y = y; _w = w; _h = h;
-        updateEdges();
+        updateBounds(x, y, w, h, oldBounds); // Replaced duplicated code with a call to updateBounds
         firePropChange("bounds", oldBounds, getBounds());
     }
 
     private void updateShapeBounds(int x, int y, int w, int h, Dimension nameDim, Rectangle oldBounds) {
-        dividerline.setShape(x, y, x + w , y);
+        dividerline.setShape(x, y, x + w, y);
         getNameFig().setBounds(x + 2, y + 2, w - 4, nameDim.height);
         getInternal().setBounds(x + 2, y + nameDim.height + 4, w - 4, h - nameDim.height - 8);
         getBigPort().setBounds(x, y, w, h);
@@ -330,9 +309,10 @@ public class FigConcurrentRegion extends FigState
 
     /**
      * To resize with X and Y increments, absolute width and keeping the height.
-     * @param xInc the x increment
-     * @param yInc the y increment
-     * @param w the width
+     * 
+     * @param xInc        the x increment
+     * @param yInc        the y increment
+     * @param w           the width
      * @param concurrency is concurrent?
      */
     public void setBounds(int xInc, int yInc, int w, boolean concurrency) {
@@ -352,11 +332,11 @@ public class FigConcurrentRegion extends FigState
      * To resize with X, Y and height increments and absolute width.
      * The boolean parameter is added in order to override the method.
      *
-     * @param xInc the x increment
-     * @param yInc the y increment
-     * @param w the width
+     * @param xInc        the x increment
+     * @param yInc        the y increment
+     * @param w           the width
      * @param concurrency is concurrent?
-     * @param hInc the height increment
+     * @param hInc        the height increment
      */
     public void setBounds(int xInc, int yInc, int w, int hInc,
             boolean concurrency) {
@@ -397,8 +377,8 @@ public class FigConcurrentRegion extends FigState
     // fig accessors
 
     /*
-     * This function only sets the color of the divider line 
-     * (since that is the only visible part), and can be used to make 
+     * This function only sets the color of the divider line
+     * (since that is the only visible part), and can be used to make
      * the divider line invisible for the top region in a composite state.
      * 
      * @see org.tigris.gef.presentation.Fig#setLineColor(java.awt.Color)
@@ -442,7 +422,6 @@ public class FigConcurrentRegion extends FigState
         getBigPort().setFilled(f);
     }
 
-
     @Override
     public boolean isFilled() {
         return cover.isFilled();
@@ -468,8 +447,8 @@ public class FigConcurrentRegion extends FigState
     // event processing
 
     protected void modelChanged(PropertyChangeEvent mee) {
-        // TODO: Rather than specifically ignore some item 
-        // maybe it would be better to specifically state 
+        // TODO: Rather than specifically ignore some item
+        // maybe it would be better to specifically state
         // what items are of interest. Otherwise we may still
         // be acting on other events we don't need
         if (!Model.getFacade().isATransition(mee.getNewValue())
@@ -479,7 +458,7 @@ public class FigConcurrentRegion extends FigState
             super.modelChanged(mee);
         }
     }
-    
+
     /*
      * @see org.tigris.gef.presentation.Fig#makeSelection()
      */
@@ -531,7 +510,7 @@ public class FigConcurrentRegion extends FigState
 
     @Override
     protected void updateLayout(UmlChangeEvent event) {
-        if (!"container".equals(event.getPropertyName()) 
+        if (!"container".equals(event.getPropertyName())
                 && !"isConcurrent".equals(event.getPropertyName())) {
             super.updateLayout(event);
         }
@@ -589,7 +568,8 @@ public class FigConcurrentRegion extends FigState
     }
 
     /*
-     * @see java.awt.event.MouseMotionListener#mouseDragged(java.awt.event.MouseEvent)
+     * @see
+     * java.awt.event.MouseMotionListener#mouseDragged(java.awt.event.MouseEvent)
      */
     public void mouseDragged(MouseEvent e) {
         if (curHandle.index == -1) {

@@ -75,41 +75,7 @@ public class ToDoByPoster extends ToDoPerspective
      */
     public void toDoItemsChanged(ToDoListEvent tde) {
         LOG.log(Level.FINE, "toDoItemsChanged");
-        List<ToDoItem> items = tde.getToDoItemList();
-	Object[] path = new Object[2];
-	path[0] = Designer.theDesigner().getToDoList();
-
-	ListSet<Poster> allPosters =
-	    Designer.theDesigner().getToDoList().getPosters();
-        synchronized (allPosters) {
-            for (Poster p : allPosters) {
-                path[1] = p;
-                int nMatchingItems = 0;
-                for (ToDoItem item : items) {
-                    Poster post = item.getPoster();
-                    if (post != p) {
-                        continue;
-                    }
-                    nMatchingItems++;
-                }
-                if (nMatchingItems == 0) {
-                    continue;
-                }
-                int[] childIndices = new int[nMatchingItems];
-                Object[] children = new Object[nMatchingItems];
-                nMatchingItems = 0;
-                for (ToDoItem item : items) {
-                    Poster post = item.getPoster();
-                    if (post != p) {
-                        continue;
-                    }
-                    childIndices[nMatchingItems] = getIndexOfChild(p, item);
-                    children[nMatchingItems] = item;
-                    nMatchingItems++;
-                }
-                fireTreeNodesChanged(this, path, childIndices, children);
-            }
-        }
+        handleToDoItemsEvent(tde, EventType.CHANGED);
     }
 
     /*
@@ -117,41 +83,52 @@ public class ToDoByPoster extends ToDoPerspective
      */
     public void toDoItemsAdded(ToDoListEvent tde) {
         LOG.log(Level.FINE, "toDoItemAdded");
-	List<ToDoItem> items = tde.getToDoItemList();
-	Object[] path = new Object[2];
-	path[0] = Designer.theDesigner().getToDoList();
+        handleToDoItemsEvent(tde, EventType.ADDED);
+    }
 
-	ListSet<Poster> allPosters =
-	    Designer.theDesigner().getToDoList().getPosters();
-	synchronized (allPosters) {
+    private void handleToDoItemsEvent(ToDoListEvent tde, EventType eventType) {
+        List<ToDoItem> items = tde.getToDoItemList();
+        Object[] path = new Object[2];
+        path[0] = Designer.theDesigner().getToDoList();
+
+        ListSet<Poster> allPosters = Designer.theDesigner().getToDoList().getPosters();
+        synchronized (allPosters) {
             for (Poster p : allPosters) {
                 path[1] = p;
                 int nMatchingItems = 0;
+
                 for (ToDoItem item : items) {
-                    Poster post = item.getPoster();
-                    if (post != p) {
-                        continue;
+                    if (item.getPoster() == p) {
+                        nMatchingItems++;
                     }
-                    nMatchingItems++;
                 }
                 if (nMatchingItems == 0) {
                     continue;
                 }
+
                 int[] childIndices = new int[nMatchingItems];
                 Object[] children = new Object[nMatchingItems];
                 nMatchingItems = 0;
+
                 for (ToDoItem item : items) {
-                    Poster post = item.getPoster();
-                    if (post != p) {
-                        continue;
+                    if (item.getPoster() == p) {
+                        childIndices[nMatchingItems] = getIndexOfChild(p, item);
+                        children[nMatchingItems] = item;
+                        nMatchingItems++;
                     }
-                    childIndices[nMatchingItems] = getIndexOfChild(p, item);
-                    children[nMatchingItems] = item;
-                    nMatchingItems++;
                 }
-                fireTreeNodesInserted(this, path, childIndices, children);
+
+                if (eventType == EventType.CHANGED) {
+                    fireTreeNodesChanged(this, path, childIndices, children);
+                } else if (eventType == EventType.ADDED) {
+                    fireTreeNodesInserted(this, path, childIndices, children);
+                }
             }
         }
+    }
+
+    private enum EventType {
+        CHANGED, ADDED
     }
 
     /*
