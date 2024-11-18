@@ -50,22 +50,19 @@ import org.argouml.cognitive.critics.Wizard;
 import org.argouml.model.Model;
 import org.argouml.uml.cognitive.UMLDecision;
 
-
 /**
- * A critic to detect whether a state has a name.
- * Does not apply to all kinds of states!
- * E.g. excluded are final state, initial state, action state,...
+ * This critics tests if a ModelElement has a name.
  */
-public class CrMissingStateName extends CrUML {
+class CrMissingClassName extends CrUML {
 
     /**
      * The constructor.
      */
-    public CrMissingStateName() {
+    public CrMissingClassName() {
         setupHeadAndDesc();
-	addSupportedDecision(UMLDecision.NAMING);
-	setKnowledgeTypes(Critic.KT_COMPLETENESS, Critic.KT_SYNTAX);
-	addTrigger("name");
+        addSupportedDecision(UMLDecision.NAMING);
+        setKnowledgeTypes(Critic.KT_COMPLETENESS, Critic.KT_SYNTAX);
+        addTrigger("name");
     }
 
     /*
@@ -74,39 +71,19 @@ public class CrMissingStateName extends CrUML {
      */
     @Override
     public boolean predicate2(Object dm, Designer dsgr) {
-	if (!Model.getFacade().isAStateVertex(dm)) {
+        if (!(Model.getFacade().isAModelElement(dm))) {
             return NO_PROBLEM;
         }
-        if (Model.getFacade().isACompositeState(dm)
-                && Model.getFacade().isTop(dm)) {
-            return NO_PROBLEM;
-        }
-        if (Model.getFacade().isAFinalState(dm)) {
-            return NO_PROBLEM;
-        }
-        if (Model.getFacade().isAPseudostate(dm)) {
-            return NO_PROBLEM;
-        }
-        if (Model.getFacade().isAActionState(dm)) {
-            return NO_PROBLEM;
-        }
-        if (Model.getFacade().isAObjectFlowState(dm)) {
-            return NO_PROBLEM;
-        }
-
-	String myName = Model.getFacade().getName(dm);
-	if (myName == null || myName.equals("") || myName.length() == 0) {
-            return PROBLEM_FOUND;
-        }
-	return NO_PROBLEM;
+        return isNameMissing(dm) ? PROBLEM_FOUND : NO_PROBLEM;
     }
+
 
     /*
      * @see org.argouml.cognitive.Poster#getClarifier()
      */
     @Override
     public Icon getClarifier() {
-	return ClClassName.getTheInstance();
+        return ClClassName.getTheInstance();
     }
 
     /*
@@ -115,33 +92,28 @@ public class CrMissingStateName extends CrUML {
      */
     @Override
     public void initWizard(Wizard w) {
-	if (w instanceof WizMEName) {
-	    ToDoItem item = (ToDoItem) w.getToDoItem();
-	    Object me = item.getOffenders().get(0);
-	    String ins = super.getInstructions();
-	    String sug = super.getDefaultSuggestion();
-	    if (Model.getFacade().isAStateVertex(me)) {
-		Object sv = me;
-		int count = 1;
-		if (Model.getFacade().getContainer(sv) != null) {
-		    count =
-		        Model.getFacade().getSubvertices(
-		                Model.getFacade().getContainer(sv)).size();
-                }
-		sug = "S" + (count + 1);
-	    }
-	    ((WizMEName) w).setInstructions(ins);
-	    ((WizMEName) w).setSuggestion(sug);
-	}
+        if (w instanceof WizMEName) {
+            ToDoItem item = (ToDoItem) w.getToDoItem();
+            Object me = item.getOffenders().get(0);
+            String ins = super.getInstructions();
+            String sug = super.getDefaultSuggestion();
+            int count = 1;
+            if (Model.getFacade().getNamespace(me) != null) {
+                count =
+                        Model.getFacade().getOwnedElements(
+                                Model.getFacade().getNamespace(me)).size();
+            }
+            sug = Model.getFacade().getUMLClassName(me) + (count + 1);
+            ((WizMEName) w).setInstructions(ins);
+            ((WizMEName) w).setSuggestion(sug);
+        }
     }
 
     /*
      * @see org.argouml.cognitive.critics.Critic#getWizardClass(org.argouml.cognitive.ToDoItem)
      */
     @Override
-    public Class getWizardClass(ToDoItem item) {
-        return WizMEName.class;
-    }
+    public Class getWizardClass(ToDoItem item) { return WizMEName.class; }
 
     /*
      * @see org.argouml.uml.cognitive.critics.CrUML#getCriticizedDesignMaterials()
@@ -149,12 +121,8 @@ public class CrMissingStateName extends CrUML {
     @Override
     public Set<Object> getCriticizedDesignMaterials() {
         Set<Object> ret = new HashSet<Object>();
-        ret.add(Model.getMetaTypes().getStateVertex());
+        ret.add(Model.getMetaTypes().getUMLClass());
         return ret;
     }
-    
-    /**
-     * The UID.
-     */
-    private static final long serialVersionUID = 1181623952639408440L;
+
 }

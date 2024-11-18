@@ -93,39 +93,4 @@ public class ActionAddClientDependencyAction extends
             .moveToTrash(toBeDeleted);
     }
 
-    /*
-     * @see org.argouml.uml.ui.AbstractActionAddModelElement#getChoices()
-     */
-    protected List getChoices() {
-        List ret = new ArrayList();
-        Object model =
-            ProjectManager.getManager().getCurrentProject().getModel();
-        if (getTarget() != null) {
-            Object modelElementType = Model.getMetaTypes().getModelElement();
-            ret.addAll(Model.getModelManagementHelper()
-                    .getAllModelElementsOfKind(model, modelElementType));
-            ret.remove(getTarget());
-        }
-        return ret;
-    }
-
-    /*
-     * @see org.argouml.uml.ui.AbstractActionAddModelElement#getDialogTitle()
-     */
-    protected String getDialogTitle() {
-        return Translator.localize("dialog.title.add-client-dependency");
-    }
-
-    /*
-     * @see org.argouml.uml.ui.AbstractActionAddModelElement#getSelected()
-     */
-    protected List getSelected() {
-        List v = new ArrayList();
-        Collection c =  Model.getFacade().getClientDependencies(getTarget());
-        for (Object cd : c) {
-            v.addAll(Model.getFacade().getSuppliers(cd));
-        }
-        return v;
-    }
-
 }
