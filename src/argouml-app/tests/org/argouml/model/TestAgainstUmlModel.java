@@ -50,6 +50,7 @@ import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.XMLConstants;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -224,9 +225,15 @@ public class TestAgainstUmlModel extends TestCase {
      */
     private static Document prepareDocument()
 	throws ParserConfigurationException, SAXException, IOException {
-	DocumentBuilder builder =
-	    DocumentBuilderFactory.newInstance().newDocumentBuilder();
-	String fileName = System.getProperty("test.model.uml");
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+        String fileName = System.getProperty("test.model.uml");
+
 	if (fileName == null) {
 	    printInconclusiveMessage("The property test.model.uml "
 				     + "is not set.");
@@ -238,6 +245,14 @@ public class TestAgainstUmlModel extends TestCase {
 				     + " cannot be found.");
 	    return null;
 	}
+        builder.setValidation(false);
+
+        builder.setFeature( "http://xml.org/sax/features/validation", false );
+
+        builder.setFeature( "http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false );
+
+        builder.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+
         Document document = builder.parse(file);
 
         Element root = document.getDocumentElement();
