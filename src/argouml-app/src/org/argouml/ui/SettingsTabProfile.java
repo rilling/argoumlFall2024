@@ -125,19 +125,8 @@ public class SettingsTabProfile extends JPanel implements
     private void buildPanel() {
         setLayout(new BorderLayout());
 
-        JPanel warning = new JPanel();
-        warning.setLayout(new BoxLayout(warning, BoxLayout.PAGE_AXIS));
-        JLabel warningLabel = new JLabel(Translator.localize("label.warning"));
-        warningLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        warning.add(warningLabel);
-
-        JLinkButton projectSettings = new JLinkButton();
-        projectSettings.setAction(new ActionProjectSettings());
-        projectSettings.setText(Translator.localize("button.project-settings"));
-        projectSettings.setIcon(null);
-        projectSettings.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        warning.add(projectSettings);
-
+        // The refactored WarningPanel
+        JPanel warning = new WarningPanel();
         add(warning, BorderLayout.NORTH);
 
         JPanel profileSettings = new JPanel();
