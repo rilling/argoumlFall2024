@@ -601,43 +601,77 @@ class XmiReferenceResolverImpl extends XmiContext {
         InputStream stream = null;
         URL url = null;
         try {
+            // Validate the input URL
+            if (systemId == null || (!systemId.startsWith("http://") && !systemId.startsWith("https://"))) {
+                throw new MalformedURLException("Invalid URL format or protocol");
+            }
+
             url = new URL(systemId);
+
+            // Enforce domain whitelist
+            if (!isAllowedDomain(url)) {
+                throw new SecurityException("Domain not allowed");
+            }
+
             URLConnection connection = url.openConnection();
+
+            // Set timeouts to prevent resource exhaustion
+            connection.setConnectTimeout(5000); // 5 seconds
+            connection.setReadTimeout(5000);    // 5 seconds
+
             stream = connection.getInputStream();
-            // There is a design decision in java not to redirect
-            // automatically between http and https connections.
-            // This appeared as a problem when moving to github
-            // because the redirect from http://argouml.org then
-            // went to https://argouml*.github.io and suddenly
-            // the getInputStream succeeded for non-existing files
-            // since the redirect response doesn't throw an IOException.
+
             if (connection instanceof HttpURLConnection) {
                 HttpURLConnection huc = (HttpURLConnection) connection;
-                if (huc.getResponseCode() / 100 == 3) {
+                if (huc.getResponseCode() / 100 == 3) { // Handle redirects
                     String whereto = huc.getHeaderField("Location");
-                    url = new URL(whereto);
-                    connection = url.openConnection();
+                    URL redirectUrl = new URL(whereto);
+
+                    // Validate and restrict redirects
+                    if (!isAllowedDomain(redirectUrl)) {
+                        throw new SecurityException("Redirected domain not allowed");
+                    }
+
+                    connection = redirectUrl.openConnection();
                     stream = connection.getInputStream();
                 }
             } else if (connection instanceof HttpsURLConnection) {
                 HttpsURLConnection hsuc = (HttpsURLConnection) connection;
-                if (hsuc.getResponseCode() / 100 == 3) {
+                if (hsuc.getResponseCode() / 100 == 3) { // Handle redirects
                     String whereto = hsuc.getHeaderField("Location");
-                    url = new URL(whereto);
-                    connection = url.openConnection();
+                    URL redirectUrl = new URL(whereto);
+
+                    // Validate and restrict redirects
+                    if (!isAllowedDomain(redirectUrl)) {
+                        throw new SecurityException("Redirected domain not allowed");
+                    }
+
+                    connection = redirectUrl.openConnection();
                     stream = connection.getInputStream();
                 }
             }
-            stream.close();
         } catch (MalformedURLException e) {
-            url = null;
+            url = null; // Log error if necessary
         } catch (IOException e) {
-            url = null;
+            url = null; // Log error if necessary
         } finally {
-            stream = null;
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    // Log error if necessary
+                }
+            }
         }
         return url;
     }
+
+    // Helper method to enforce allowed domains
+    private boolean isAllowedDomain(URL url) {
+        List<String> allowedDomains = Arrays.asList("argouml.org", "github.io");
+        return allowedDomains.contains(url.getHost());
+    }
+
 
     /////////////////////////////////////////////////////
     ////////// End AndroMDA Code //////////////////////
