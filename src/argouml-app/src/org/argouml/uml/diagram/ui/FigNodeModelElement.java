@@ -973,7 +973,7 @@ public abstract class FigNodeModelElement
         }
     }
 
-    protected List<Object> hitClarifierHelper(int x, int y, List<ToDoList> items, int iconX){
+    protected List<Object> hitClarifierHelper(int x, int y, List<ToDoItem> items, int iconX){
         List<Object> returnList = new ArrayList<Object>();
         for (ToDoItem item : items) {
             Icon icon = item.getClarifier();
