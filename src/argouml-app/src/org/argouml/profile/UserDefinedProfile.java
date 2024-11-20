@@ -759,9 +759,13 @@ public class UserDefinedProfile extends Profile {
     }
 
     private FigNodeDescriptor loadImage(String stereotype, File f) throws IOException {
+        // Define the allowed base directory (ensure it is an absolute path)
         File baseDir = new File("/path/to/allowed/images/directory").getCanonicalFile();
 
+        // Get the canonical path of the input file to avoid path traversal issues
         File canonicalFile = f.getCanonicalFile();
+
+        // Check if the canonical file path is within the allowed base directory
         if (!canonicalFile.getPath().startsWith(baseDir.getPath())) {
             throw new SecurityException("Path traversal attempt detected");
         }
@@ -783,6 +787,7 @@ public class UserDefinedProfile extends Profile {
 
         return descriptor;
     }
+
 
 
 //    private FigNodeDescriptor loadImage(String stereotype, File f)
