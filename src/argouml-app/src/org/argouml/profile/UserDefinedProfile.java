@@ -314,7 +314,7 @@ public class UserDefinedProfile extends Profile {
 
     /**
      * Reads the informations defined as TaggedValues
-     * @param manager the profile manager which will be used to resolve
+     * the profile manager which will be used to resolve
      *        dependencies
      */
     private void loadModel() {
@@ -758,16 +758,20 @@ public class UserDefinedProfile extends Profile {
         }
     }
 
-    private FigNodeDescriptor loadImage(String stereotype, File f)
-        throws IOException {
+    private FigNodeDescriptor loadImage(String stereotype, File f) throws IOException {
+        File baseDir = new File("/path/to/allowed/images/directory").getCanonicalFile();
+
+        File canonicalFile = f.getCanonicalFile();
+        if (!canonicalFile.getPath().startsWith(baseDir.getPath())) {
+            throw new SecurityException("Path traversal attempt detected");
+        }
+
         FigNodeDescriptor descriptor = new FigNodeDescriptor();
         descriptor.length = (int) f.length();
         descriptor.src = f.getPath();
         descriptor.stereotype = stereotype;
 
-        BufferedInputStream bis = new BufferedInputStream(
-                new FileInputStream(f));
-
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(f));
         byte[] buf = new byte[descriptor.length];
         try {
             bis.read(buf);
@@ -779,4 +783,27 @@ public class UserDefinedProfile extends Profile {
 
         return descriptor;
     }
+
+
+//    private FigNodeDescriptor loadImage(String stereotype, File f)
+//        throws IOException {
+//        FigNodeDescriptor descriptor = new FigNodeDescriptor();
+//        descriptor.length = (int) f.length();
+//        descriptor.src = f.getPath();
+//        descriptor.stereotype = stereotype;
+//
+//        BufferedInputStream bis = new BufferedInputStream(
+//                new FileInputStream(f));
+//
+//        byte[] buf = new byte[descriptor.length];
+//        try {
+//            bis.read(buf);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        descriptor.img = new ImageIcon(buf).getImage();
+//
+//        return descriptor;
+//    }
 }
