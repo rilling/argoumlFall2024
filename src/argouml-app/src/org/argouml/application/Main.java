@@ -614,6 +614,12 @@ public class Main {
      * @param list The commands, a list of strings.
      */
     private static void performCommandsInternal(List<String> list) {
+        // Allowlist of valid class names
+        List<String> allowlist = List.of(
+                "org.argouml.commands.SomeValidCommand", // Replace with actual valid commands
+                "org.argouml.commands.AnotherValidCommand"
+        );
+
         for (String commandString : list) {
             int pos = commandString.indexOf('=');
 
@@ -628,8 +634,14 @@ public class Main {
                 commandArgument = commandString.substring(pos + 1);
             }
 
+            // Validate commandName against the allowlist
+            if (!allowlist.contains(commandName)) {
+                System.out.println("Rejected unknown or unsafe command: " + commandName);
+                continue;
+            }
+
             // Perform one command.
-            Class c;
+            Class<?> c;
             try {
                 c = Class.forName(commandName);
             } catch (ClassNotFoundException e) {
@@ -638,24 +650,16 @@ public class Main {
             }
 
             // Now create a new object.
-            Object o = null;
+            Object o;
             try {
-                o = c.newInstance();
-            } catch (InstantiationException e) {
-                System.out.println(commandName
-                        + " could not be instantiated - skipping"
-                        + " (InstantiationException)");
-                continue;
-            } catch (IllegalAccessException e) {
-                System.out.println(commandName
-                        + " could not be instantiated - skipping"
-                        + " (IllegalAccessException)");
+                o = c.getDeclaredConstructor().newInstance();
+            } catch (ReflectiveOperationException e) {
+                System.out.println("Failed to instantiate command: " + commandName + " - skipping");
                 continue;
             }
 
-            if (o == null || !(o instanceof CommandLineInterface)) {
-                System.out.println(commandName
-                        + " is not a command - skipping.");
+            if (!(o instanceof CommandLineInterface)) {
+                System.out.println("Invalid command implementation: " + commandName + " - skipping.");
                 continue;
             }
 
