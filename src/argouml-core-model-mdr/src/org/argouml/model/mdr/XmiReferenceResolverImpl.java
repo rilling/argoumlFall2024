@@ -48,6 +48,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -602,39 +603,41 @@ class XmiReferenceResolverImpl extends XmiContext {
         URL url = null;
         try {
             url = new URL(systemId);
-            URLConnection connection = url.openConnection();
-            stream = connection.getInputStream();
-            // There is a design decision in java not to redirect
-            // automatically between http and https connections.
-            // This appeared as a problem when moving to github
-            // because the redirect from http://argouml.org then
-            // went to https://argouml*.github.io and suddenly
-            // the getInputStream succeeded for non-existing files
-            // since the redirect response doesn't throw an IOException.
-            if (connection instanceof HttpURLConnection) {
-                HttpURLConnection huc = (HttpURLConnection) connection;
-                if (huc.getResponseCode() / 100 == 3) {
-                    String whereto = huc.getHeaderField("Location");
-                    url = new URL(whereto);
-                    connection = url.openConnection();
-                    stream = connection.getInputStream();
-                }
-            } else if (connection instanceof HttpsURLConnection) {
-                HttpsURLConnection hsuc = (HttpsURLConnection) connection;
-                if (hsuc.getResponseCode() / 100 == 3) {
-                    String whereto = hsuc.getHeaderField("Location");
-                    url = new URL(whereto);
-                    connection = url.openConnection();
-                    stream = connection.getInputStream();
-                }
+            // Validate the protocol
+            if (!url.getProtocol().equalsIgnoreCase("http") && !url.getProtocol().equalsIgnoreCase("https")) {
+                throw new IOException("Invalid protocol: " + url.getProtocol());
             }
-            stream.close();
-        } catch (MalformedURLException e) {
-            url = null;
+            // Validate the host to ensure it's not a private or loopback address
+            InetAddress address = InetAddress.getByName(url.getHost());
+            if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isSiteLocalAddress()) {
+                throw new IOException("Invalid host: " + url.getHost());
+            }
+            URLConnection connection = url.openConnection();
+            if (connection instanceof HttpURLConnection) {
+                HttpURLConnection httpConnection = (HttpURLConnection) connection;
+
+                // Prevent automatic redirects
+                httpConnection.setInstanceFollowRedirects(false);
+
+                // Check the response code
+                int responseCode = httpConnection.getResponseCode();
+                if (responseCode >= 300 && responseCode < 400) {
+                    throw new IOException("Redirect detected to: " + httpConnection.getHeaderField("Location"));
+                }
+
+                stream = httpConnection.getInputStream();
+            }
         } catch (IOException e) {
+            System.err.println("Error validating URL: " + e.getMessage());
             url = null;
         } finally {
-            stream = null;
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (IOException e) {
+                    System.err.println("Error closing stream: " + e.getMessage());
+                }
+            }
         }
         return url;
     }
