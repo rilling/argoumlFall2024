@@ -1,5 +1,5 @@
 /* $Id$
- *******************************************************************************
+ ***************************
  * Copyright (c) 2009-2012 Contributors - see below
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -9,7 +9,7 @@
  * Contributors:
  *    andreas
  *    mvw
- *******************************************************************************
+ ***************************
  *
  * Some portions of this file was previously release using the BSD License:
  */
@@ -104,7 +104,7 @@ import org.argouml.util.logging.SimpleTimer;
  * of ArgoUML application invocation:
  * non-GUI command line and Swing GUI.
  * <p>
- * 
+ *
  * NOTE: Functionality which should be common to all types of application
  * invocation (e.g. extension modules to be loaded) should added to some
  * common class and <b>not</b> here. Adding things here will cause behavior
@@ -145,7 +145,7 @@ public class Main {
 
     /**
      * The main entry point of ArgoUML.
-     * 
+     *
      * @param args command line parameters
      */
     public static void main(String[] args) {
@@ -295,7 +295,7 @@ public class Main {
                     }
 
                     public String i18nmessageFormat(String key,
-                            Object[] iArgs) {
+                                                    Object[] iArgs) {
                         return Translator.messageFormat(key, iArgs);
                     }
                 });
@@ -384,7 +384,7 @@ public class Main {
     }
 
     private static ProjectBrowser initializeSubsystems(SimpleTimer st,
-            SplashScreen splash) {
+                                                       SplashScreen splash) {
         ProjectBrowser pb = null;
 
         st.mark("initialize model subsystem");
@@ -447,7 +447,7 @@ public class Main {
     }
 
     private static void openProject(SimpleTimer st, SplashScreen splash,
-            ProjectBrowser pb, File fileToOpen) {
+                                    ProjectBrowser pb, File fileToOpen) {
         if (splash != null) {
             splash.updateProgress(40);
         }
@@ -511,7 +511,7 @@ public class Main {
      * @param message the message to be shown in the splash
      */
     private static void updateProgress(SplashScreen splash, int percent,
-            String message) {
+                                       String message) {
         if (splash != null) {
             splash.showStatus(Translator.localize(message));
             splash.updateProgress(percent);
@@ -614,12 +614,6 @@ public class Main {
      * @param list The commands, a list of strings.
      */
     private static void performCommandsInternal(List<String> list) {
-        // Allowlist of valid class names
-        List<String> allowlist = List.of(
-                "org.argouml.commands.SomeValidCommand", // Replace with actual valid commands
-                "org.argouml.commands.AnotherValidCommand"
-        );
-
         for (String commandString : list) {
             int pos = commandString.indexOf('=');
 
@@ -634,14 +628,8 @@ public class Main {
                 commandArgument = commandString.substring(pos + 1);
             }
 
-            // Validate commandName against the allowlist
-            if (!allowlist.contains(commandName)) {
-                System.out.println("Rejected unknown or unsafe command: " + commandName);
-                continue;
-            }
-
             // Perform one command.
-            Class<?> c;
+            Class c;
             try {
                 c = Class.forName(commandName);
             } catch (ClassNotFoundException e) {
@@ -650,16 +638,24 @@ public class Main {
             }
 
             // Now create a new object.
-            Object o;
+            Object o = null;
             try {
-                o = c.getDeclaredConstructor().newInstance();
-            } catch (ReflectiveOperationException e) {
-                System.out.println("Failed to instantiate command: " + commandName + " - skipping");
+                o = c.newInstance();
+            } catch (InstantiationException e) {
+                System.out.println(commandName
+                        + " could not be instantiated - skipping"
+                        + " (InstantiationException)");
+                continue;
+            } catch (IllegalAccessException e) {
+                System.out.println(commandName
+                        + " could not be instantiated - skipping"
+                        + " (IllegalAccessException)");
                 continue;
             }
 
-            if (!(o instanceof CommandLineInterface)) {
-                System.out.println("Invalid command implementation: " + commandName + " - skipping.");
+            if (o == null || !(o instanceof CommandLineInterface)) {
+                System.out.println(commandName
+                        + " is not a command - skipping.");
                 continue;
             }
 
@@ -668,8 +664,8 @@ public class Main {
             System.out.println("Performing command "
                     + commandName + "( "
                     + (commandArgument == null
-                            ? ""
-                            : commandArgument)
+                    ? ""
+                    : commandArgument)
                     + " )");
             boolean result = clio.doCommand(commandArgument);
             if (!result) {
@@ -677,8 +673,8 @@ public class Main {
                         + "the command "
                         + commandName + "( "
                         + (commandArgument == null
-                                ? ""
-                                : commandArgument)
+                        ? ""
+                        : commandArgument)
                         + " )");
                 System.out.println("Aborting the rest of the commands.");
                 return;
@@ -740,7 +736,7 @@ public class Main {
 
     /**
      * Create and display a splash screen.
-     * 
+     *
      * @return the splash screen
      */
     private static SplashScreen initializeSplash() {
@@ -798,8 +794,8 @@ public class Main {
         pb.setSize(w, h);
         pb.setExtendedState(Configuration.getBoolean(
                 Argo.KEY_SCREEN_MAXIMIZED, false)
-                        ? Frame.MAXIMIZED_BOTH
-                        : Frame.NORMAL);
+                ? Frame.MAXIMIZED_BOTH
+                : Frame.NORMAL);
 
         UIManager.put("Button.focusInputMap", new UIDefaults.LazyInputMap(
                 new Object[] {
