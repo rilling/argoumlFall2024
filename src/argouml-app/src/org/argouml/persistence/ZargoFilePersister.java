@@ -39,22 +39,11 @@
 
 package org.argouml.persistence;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
+import java.io.*;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -233,55 +222,7 @@ class ZargoFilePersister extends UmlFilePersister {
     /*
      * @see org.argouml.persistence.ProjectFilePersister#doLoad(java.io.File)
      */
-    @Override
-    public Project doLoad(File file)
-        throws OpenException, InterruptedException {
 
-        ProgressMgr progressMgr = new ProgressMgr();
-        progressMgr.setNumberOfPhases(3 + UML_PHASES_LOAD);
-        ThreadUtils.checkIfInterrupted();
-
-        int fileVersion;
-        String releaseVersion;
-        try {
-            String argoEntry = getEntryNames(file, ".argo").iterator().next();
-            URL argoUrl = makeZipEntryUrl(toURL(file), argoEntry);
-            fileVersion = getPersistenceVersion(argoUrl.openStream());
-            releaseVersion = getReleaseVersion(argoUrl.openStream());
-        } catch (MalformedURLException e) {
-            throw new OpenException(e);
-        } catch (IOException e) {
-            throw new OpenException(e);
-        }
-
-        // TODO: The commented code below was commented out by Bob Tarling
-        // in order to resolve bugs 4845 and 4857. Hopefully we can
-        // determine the cause and reintroduce.
-
-        //boolean upgradeRequired = !checkVersion(fileVersion, releaseVersion)
-        boolean upgradeRequired = true;
-
-        // Upgrade is in the way for UML2 projects, so we turn it off in that case:
-        if (Model.getFacade().getUmlVersion().charAt(0) == '2') {
-            upgradeRequired = false;
-        }
-
-        LOG.log(Level.INFO, "Loading zargo file of version {0}", fileVersion);
-
-        final Project p;
-        if (upgradeRequired) {
-            File combinedFile = zargoToUml(file, progressMgr);
-            p = super.doLoad(file, combinedFile, progressMgr);
-        } else {
-            p = loadFromZargo(file, progressMgr);
-        }
-
-        progressMgr.nextPhase();
-
-        PersistenceManager.getInstance().setProjectURI(file.toURI(), p);
-        return p;
-
-    }
 
     private Project loadFromZargo(File file, ProgressMgr progressMgr)
         throws OpenException {
@@ -584,11 +525,6 @@ class ZargoFilePersister extends UmlFilePersister {
         return makeZipEntryUrl(url, entryName).openStream();
     }
 
-    private URL makeZipEntryUrl(URL url, String entryName)
-        throws MalformedURLException {
-        String entryURL = "jar:" + url + "!/" + entryName;
-        return new URL(entryURL);
-    }
 
     /**
      * A stream of input streams for reading the Zipped file.
@@ -645,21 +581,135 @@ class ZargoFilePersister extends UmlFilePersister {
      * Get a list of zip file entries which end with the given extension.
      * If the extension is null, all entries are returned.
      */
-    private List<String> getEntryNames(File file, String extension)
-        throws IOException, MalformedURLException {
 
-        ZipInputStream zis = new ZipInputStream(toURL(file).openStream());
-        List<String> result = new ArrayList<String>();
-        ZipEntry entry = zis.getNextEntry();
-        while (entry != null) {
-            String name = entry.getName();
-            if (extension == null || name.endsWith(extension)) {
-                result.add(name);
-            }
-            entry = zis.getNextEntry();
+    @Override
+    public Project doLoad(File file)
+            throws OpenException, InterruptedException {
+
+        ProgressMgr progressMgr = new ProgressMgr();
+        progressMgr.setNumberOfPhases(3 + UML_PHASES_LOAD);
+        ThreadUtils.checkIfInterrupted();
+
+        int fileVersion;
+        String releaseVersion;
+        try {
+            // Validate the zip file structure
+            validateZipFile(file);
+
+            String argoEntry = getEntryNames(file, ".argo").iterator().next();
+            // Validate entry name
+            validateZipEntryName(argoEntry);
+
+            // Read zip entry contents securely
+            String argoContent = getZipEntryContent(file, argoEntry);
+            fileVersion = getPersistenceVersion(new ByteArrayInputStream(argoContent.getBytes(StandardCharsets.UTF_8)));
+            releaseVersion = getReleaseVersion(new ByteArrayInputStream(argoContent.getBytes(StandardCharsets.UTF_8)));
+        } catch (MalformedURLException e) {
+            throw new OpenException(e);
+        } catch (IOException e) {
+            throw new OpenException(e);
         }
-        zis.close();
+
+        boolean upgradeRequired = true;
+        if (Model.getFacade().getUmlVersion().charAt(0) == '2') {
+            upgradeRequired = false;
+        }
+
+        LOG.log(Level.INFO, "Loading zargo file of version {0}", fileVersion);
+
+        final Project p;
+        if (upgradeRequired) {
+            File combinedFile = zargoToUml(file, progressMgr);
+            p = super.doLoad(file, combinedFile, progressMgr);
+        } else {
+            p = loadFromZargo(file, progressMgr);
+        }
+
+        progressMgr.nextPhase();
+        PersistenceManager.getInstance().setProjectURI(file.toURI(), p);
+        return p;
+    }
+
+    /**
+     * Extracts the content of a specific zip entry as a string.
+     */
+    private String getZipEntryContent(File file, String entryName) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(toURL(file).openStream())) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().equals(entryName)) {
+                    // Read entry content into a string
+                    return new String(zis.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            }
+        }
+        throw new IOException("Entry " + entryName + " not found in the zip file.");
+    }
+
+    private URL makeZipEntryUrl(URL url, String entryName)
+            throws MalformedURLException {
+        if (!url.getProtocol().equals("file")) {
+            throw new MalformedURLException("Only local file URLs are allowed.");
+        }
+        String entryURL = "jar:" + url + "!/" + entryName;
+        return new URL(entryURL);
+    }
+
+    private List<String> getEntryNames(File file, String extension)
+            throws IOException, MalformedURLException {
+        List<String> result = new ArrayList<>();
+        try (ZipInputStream zis = new ZipInputStream(toURL(file).openStream())) {
+            ZipEntry entry = zis.getNextEntry();
+            while (entry != null) {
+                String name = entry.getName();
+                try {
+                    validateZipEntryName(name);  // Validate entry names
+                } catch (OpenException e) {
+                    throw new RuntimeException(e);
+                }
+                if (extension == null || name.endsWith(extension)) {
+                    result.add(name);
+                }
+                entry = zis.getNextEntry();
+            }
+        }
         return result;
+    }
+
+    private void validateZipFile(File file) throws OpenException {
+        if (file == null || !file.exists() || !file.isFile()) {
+            throw new OpenException("Invalid or non-existent zip file.");
+        }
+        try (ZipInputStream zis = new ZipInputStream(toURL(file).openStream())) {
+            if (zis.getNextEntry() == null) {
+                throw new OpenException("Zip file is empty or invalid.");
+            }
+        } catch (IOException e) {
+            throw new OpenException("Failed to validate zip file.", e);
+        }
+    }
+
+    private void validateZipEntryName(String entryName) throws OpenException {
+        if (entryName == null || entryName.contains("..") || entryName.startsWith("/")) {
+            throw new OpenException("Invalid zip entry name: " + entryName);
+        }
+    }
+
+    private void validateUrl(URL url) throws OpenException {
+        try {
+            // Resolve the host from the URL
+            InetAddress address = InetAddress.getByName(url.getHost());
+
+            // Check if the resolved IP address is a local or private IP
+            if (address.isLoopbackAddress() || address.isSiteLocalAddress()) {
+                return; // Allow loopback and private addresses
+            }
+
+            // Optionally, block all external addresses
+            throw new OpenException("Access to external URLs is not allowed: " + url);
+        } catch (Exception e) {
+            throw new OpenException("Failed to validate URL: " + url, e);
+        }
     }
 
 
