@@ -614,6 +614,13 @@ public class Main {
      * @param list The commands, a list of strings.
      */
     private static void performCommandsInternal(List<String> list) {
+        // Define an allowlist of valid command class names
+        List<String> allowedCommands = List.of(
+                "org.argouml.command.ValidCommand1",
+                "org.argouml.command.ValidCommand2",
+                "org.argouml.command.ValidCommand3"
+        );
+
         for (String commandString : list) {
             int pos = commandString.indexOf('=');
 
@@ -628,8 +635,14 @@ public class Main {
                 commandArgument = commandString.substring(pos + 1);
             }
 
-            // Perform one command.
-            Class c;
+            // Validate the command name against the allowlist
+            if (!allowedCommands.contains(commandName)) {
+                System.out.println("Command not allowed: " + commandName);
+                continue;
+            }
+
+            // Perform the validated command
+            Class<?> c;
             try {
                 c = Class.forName(commandName);
             } catch (ClassNotFoundException e) {
@@ -637,47 +650,25 @@ public class Main {
                 continue;
             }
 
-            // Now create a new object.
-            Object o = null;
+            // Instantiate and execute the command safely
+            Object o;
             try {
-                o = c.newInstance();
-            } catch (InstantiationException e) {
-                System.out.println(commandName
-                        + " could not be instantiated - skipping"
-                        + " (InstantiationException)");
-                continue;
-            } catch (IllegalAccessException e) {
-                System.out.println(commandName
-                        + " could not be instantiated - skipping"
-                        + " (IllegalAccessException)");
+                o = c.getDeclaredConstructor().newInstance();
+            } catch (ReflectiveOperationException e) {
+                System.out.println("Failed to instantiate command: " + commandName);
                 continue;
             }
 
-            if (o == null || !(o instanceof CommandLineInterface)) {
-                System.out.println(commandName
-                        + " is not a command - skipping.");
+            if (!(o instanceof CommandLineInterface)) {
+                System.out.println(commandName + " is not a valid command.");
                 continue;
             }
 
             CommandLineInterface clio = (CommandLineInterface) o;
-
-            System.out.println("Performing command "
-                    + commandName + "( "
-                    + (commandArgument == null
-                            ? ""
-                            : commandArgument)
-                    + " )");
             boolean result = clio.doCommand(commandArgument);
             if (!result) {
-                System.out.println("There was an error executing "
-                        + "the command "
-                        + commandName + "( "
-                        + (commandArgument == null
-                                ? ""
-                                : commandArgument)
-                        + " )");
-                System.out.println("Aborting the rest of the commands.");
-                return;
+                System.out.println("Error executing command: " + commandName);
+                break;
             }
         }
     }
