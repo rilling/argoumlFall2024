@@ -39,6 +39,7 @@
 package org.argouml.uml.ui;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -47,7 +48,9 @@ import javax.swing.Icon;
 import javax.swing.JOptionPane;
 
 import org.argouml.i18n.Translator;
+import org.argouml.kernel.ProjectManager;
 import org.argouml.kernel.UmlModelMutator;
+import org.argouml.model.Model;
 import org.argouml.ui.UndoableAction;
 import org.argouml.util.ArgoFrame;
 
@@ -109,22 +112,36 @@ public abstract class AbstractActionAddModelElement2 extends UndoableAction {
             doIt(dialog.getSelected());
         }
     }
-    
-    /**
-     * Returns the choices the user has in the UMLAddDialog. The choices are
-     * depicted on the left side of the UMLAddDialog (sorry Arabic users) and
-     * can be moved via the buttons on the dialog to the right side. On the
-     * right side are the selected modelelements.
-     * @return List of choices
-     */
-    protected abstract List getChoices();
 
-    
-    /**
-     * The modelelements already selected BEFORE the dialog is shown.
-     * @return List of model elements
+    /*
+     * @see org.argouml.uml.ui.AbstractActionAddModelElement#getChoices()
      */
-    protected abstract List getSelected();
+    protected List getChoices() {
+        List ret = new ArrayList();
+        Object model =
+            ProjectManager.getManager().getCurrentProject().getModel();
+        if (getTarget() != null) {
+            Object modelElementType = Model.getMetaTypes().getModelElement();
+
+            ret.addAll(Model.getModelManagementHelper()
+                    .getAllModelElementsOfKind(model, modelElementType));
+            ret.remove(getTarget());
+        }
+        return ret;
+    }
+
+
+    /*
+     * @see org.argouml.uml.ui.AbstractActionAddModelElement#getSelected()
+     */
+    protected List getSelected() {
+        List v = new ArrayList();
+        Collection c =  Model.getFacade().getSupplierDependencies(getTarget());
+        for (Object supplierDependency : c) {
+            v.addAll(Model.getFacade().getClients(supplierDependency));
+        }
+        return v;
+    }
 
     /**
      * The action that has to be done by ArgoUml after the user clicks ok in the
@@ -158,11 +175,12 @@ public abstract class AbstractActionAddModelElement2 extends UndoableAction {
         target = theTarget;
     }
 
-    /**
-     * Returns the title of the dialog.
-     * @return String
+    /*
+     * @see org.argouml.uml.ui.AbstractActionAddModelElement#getDialogTitle()
      */
-    protected abstract String getDialogTitle();
+    protected String getDialogTitle() {
+        return Translator.localize("dialog.title.add-supplier-dependency");
+    }
 
     /**
      * Returns the exclusive.

@@ -973,6 +973,40 @@ public abstract class FigNodeModelElement
         }
     }
 
+    protected List<Object> hitClarifierHelper(int x, int y, List<ToDoItem> items, int iconX){
+        List<Object> returnList = new ArrayList<Object>();
+        for (ToDoItem item : items) {
+            Icon icon = item.getClarifier();
+            int width = icon.getIconWidth();
+            if (y >= getY() - 15
+                    && y <= getY() + 10
+                    && x >= iconX
+                    && x <= iconX + width) {
+                returnList.add(item);
+                returnList.add(new Integer(iconX));
+                return returnList;
+            }
+            iconX += width;
+        }
+        for (ToDoItem item : items) {
+            Icon icon = item.getClarifier();
+            if (icon instanceof Clarifier) {
+                ((Clarifier) icon).setFig(this);
+                ((Clarifier) icon).setToDoItem(item);
+                if (((Clarifier) icon).hit(x, y)) {
+                    returnList.add(item);
+                    returnList.add(new Integer(iconX));
+                    return returnList;
+                }
+            }
+        }
+
+        returnList.add(null);
+        returnList.add(iconX);
+
+        return returnList;
+    }
+
     /**
      * @param x the x of the hit
      * @param y the y of the hit
@@ -983,48 +1017,17 @@ public abstract class FigNodeModelElement
         int iconX = getX();
         ToDoList tdList = Designer.theDesigner().getToDoList();
         List<ToDoItem> items = tdList.elementListForOffender(getOwner());
-        for (ToDoItem item : items) {
-            Icon icon = item.getClarifier();
-            int width = icon.getIconWidth();
-            if (y >= getY() - 15
-                    && y <= getY() + 10
-                    && x >= iconX
-                    && x <= iconX + width) {
-                return item;
-            }
-            iconX += width;
+        List<Object> returnValue = hitClarifierHelper(x,y, items, iconX);
+
+        if((ToDoItem) returnValue.get(0)!=null){
+            return (ToDoItem) returnValue.get(0);
         }
-        for (ToDoItem item : items) {
-            Icon icon = item.getClarifier();
-            if (icon instanceof Clarifier) {
-                ((Clarifier) icon).setFig(this);
-                ((Clarifier) icon).setToDoItem(item);
-                if (((Clarifier) icon).hit(x, y)) {
-                    return item;
-                }
-            }
-        }
+
         items = tdList.elementListForOffender(this);
-        for (ToDoItem item : items) {
-            Icon icon = item.getClarifier();
-            int width = icon.getIconWidth();
-            if (y >= getY() - 15
-                    && y <= getY() + 10
-                    && x >= iconX
-                    && x <= iconX + width) {
-                return item;
-            }
-            iconX += width;
-        }
-        for (ToDoItem item : items) {
-            Icon icon = item.getClarifier();
-            if (icon instanceof Clarifier) {
-                ((Clarifier) icon).setFig(this);
-                ((Clarifier) icon).setToDoItem(item);
-                if (((Clarifier) icon).hit(x, y)) {
-                    return item;
-                }
-            }
+        returnValue = hitClarifierHelper(x,y, items, (Integer) returnValue.get(1));
+
+        if((ToDoItem) returnValue.get(0)!=null){
+            return (ToDoItem) returnValue.get(0);
         }
         return null;
     }
