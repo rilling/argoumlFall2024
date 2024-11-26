@@ -38,8 +38,10 @@
 
 package org.argouml.util.osdep;
 
+import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,43 +60,32 @@ public class StartBrowser {
      *
      * @param url string containing the given URL
      */
-    public static void openUrl(String url) {
-	try {
-	    if (OsUtil.isWin32()) {
-		Runtime.getRuntime().exec(
-                        "rundll32 url.dll,FileProtocolHandler " + url);
-	    }
-	    else if (OsUtil.isMac()) {
-		try {
-		    ClassLoader cl = ClassLoader.getSystemClassLoader();
-		    Class c = cl.loadClass("com.apple.mrj.MRJFileUtils");
-		    Class[] argtypes = {
-			String.class,
-		    };
-		    Method m = c.getMethod("openURL", argtypes);
-		    Object[] args = {
-			url,
-		    };
-		    m.invoke(c.newInstance(), args);
-		} catch (Exception cnfe) {
-                    LOG.log(Level.SEVERE, "", cnfe);
-                    LOG.log(Level.INFO, "Trying a default browser (netscape)");
-		    String[] commline = {
-			"netscape", url,
-		    };
-		    Runtime.getRuntime().exec(commline);
-		}
-	    }
-	    else {
-                Runtime.getRuntime().exec("firefox " + url);
-	    }
-	}
-	catch (IOException ioe) {
-	    // Didn't work.
-            LOG.log(Level.SEVERE, "", ioe);
-	}
+	public static void openUrl(String url) {
+		Logger LOG = Logger.getLogger("UrlOpener");
 
-    }
+		try {
+			// Check if Desktop API is supported
+			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+				Desktop.getDesktop().browse(new URI(url));
+			} else {
+				// Fallback for OS-specific handling if Desktop is not supported
+				if (OsUtil.isWin32()) {
+					ProcessBuilder pb = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url);
+					pb.start();
+				} else if (OsUtil.isMac()) {
+					// Use 'open' command on MacOS
+					ProcessBuilder pb = new ProcessBuilder("open", url);
+					pb.start();
+				} else {
+					// Fallback to using 'xdg-open' for Linux or other Unix-based systems
+					ProcessBuilder pb = new ProcessBuilder("xdg-open", url);
+					pb.start();
+				}
+			}
+		} catch (Exception e) {
+			LOG.log(Level.SEVERE, "Failed to open URL: " + url, e);
+		}
+	}
 
     /**
      * Open an URL in the system's default browser.
