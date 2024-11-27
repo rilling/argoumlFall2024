@@ -5,18 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="895b27b6-2c86-4301-8f57-e703593a1f56" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/argouml-app/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/UmlFilePersister.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/UmlFilePersister.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/argouml-core-model-mdr/src/org/argouml/model/mdr/XmiReferenceResolverImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-core-model-mdr/src/org/argouml/model/mdr/XmiReferenceResolverImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/uml/reveng/ImportCommon.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/uml/reveng/ImportCommon.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/argouml-core-model-mdr/src/org/argouml/model/mdr/XmiReaderImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-core-model-mdr/src/org/argouml/model/mdr/XmiReaderImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FindBugs-IDEA-Workspace">
+    <toolWindowScrollToSource>false</toolWindowScrollToSource>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -26,16 +26,16 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "ads2602"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;ads2602&quot;
   }
-}]]></component>
+}</component>
   <component name="GithubPullRequestsUISettings"><![CDATA[{
   "selectedUrlAndAccountId": {
-    "url": "https://github.com/bhsrampage/argoumlFall2024_cloneFork.git",
-    "accountId": "723a4759-2b00-4cc6-ae63-3e7d0a41a70a"
+    "url": "https://github.com/vishnurajendran/argoumlFall2024.git",
+    "accountId": "201fdfda-031d-4697-9039-0dc80e3f13a9"
   }
 }]]></component>
   <component name="MarkdownSettingsMigration">
@@ -58,22 +58,34 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.Main.executor": "Run",
+    "Maven.argouml-core [clean,install].executor": "Run",
+    "Maven.argouml-core [compile].executor": "Run",
+    "Maven.argouml-core [spotbugs:check].executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "Aditya2",
+    "git-widget-placeholder": "sw__vul",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "settings.findbugs.project",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="mvn clean install" />
+      <command value="mvn spotbugs:check" />
+      <command value="mvn compile" />
+    </option>
+  </component>
   <component name="RunManager">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.argouml.application.Main" />
@@ -94,6 +106,14 @@
       </list>
     </recent_temporary>
   </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23726.103" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23726.103" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -104,6 +124,7 @@
       <updated>1731966528904</updated>
       <workItem from="1731966530120" duration="185000" />
       <workItem from="1731966722534" duration="2216000" />
+      <workItem from="1732726495984" duration="10866000" />
     </task>
     <servers />
   </component>
@@ -128,11 +149,6 @@
           <url>file://$PROJECT_DIR$/src/argouml-app/src/org/argouml/ui/ProjectBrowser.java</url>
           <line>139</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/UmlFilePersister.java</url>
-          <line>467</line>
-          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
