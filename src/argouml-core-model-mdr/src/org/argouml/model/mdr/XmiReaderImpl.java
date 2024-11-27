@@ -63,13 +63,11 @@ import javax.jmi.reflect.InvalidObjectException;
 import javax.jmi.reflect.RefObject;
 import javax.jmi.reflect.RefPackage;
 import javax.jmi.xmi.MalformedXMIException;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.stream.StreamResult;
@@ -488,66 +486,137 @@ class XmiReaderImpl implements XmiReader, UnknownElementsListener,
      * can't figure out what, so I've done a simpler, less efficient stepwise
      * translation below in serialTransform
      */
+//    private InputSource chainedTransform(String[] styles, InputSource input)
+//        throws XmiException {
+//        SAXTransformerFactory stf =
+//            (SAXTransformerFactory) TransformerFactory.newInstance();
+//
+//        // TODO: Reconfigure exception handling to distinguish between errors
+//        // that are possible due to bad input data and those that represent
+//        // unexpected processing errors.
+//        try {
+//            // Set up reader to be first filter in chain
+//            SAXParserFactory spf = SAXParserFactory.newInstance();
+//            SAXParser parser = spf.newSAXParser();
+//            XMLReader last = parser.getXMLReader();
+//
+//            // Create filter for each style sheet and chain to previous
+//            // filter/reader
+//            for (int i = 0; i < styles.length; i++) {
+//                String xsltFileName = STYLE_PATH + styles[i];
+//                URL xsltUrl = getClass().getResource(xsltFileName);
+//                if (xsltUrl == null) {
+//                    throw new IOException("Error opening XSLT style sheet : "
+//                            + xsltFileName);
+//                }
+//                StreamSource xsltStreamSource =
+//                    new StreamSource(xsltUrl.openStream());
+//                xsltStreamSource.setSystemId(xsltUrl.toExternalForm());
+//                XMLFilter filter = stf.newXMLFilter(xsltStreamSource);
+//
+//                filter.setParent(last);
+//                last = filter;
+//            }
+//
+//            SAXSource transformSource = new SAXSource(last, input);
+//
+//            // Create temporary file for output
+//            // TODO: we should be able to chain this directly to XMI reader
+//            File tmpFile = File.createTempFile(TEMP_XMI_FILE_PREFIX, ".xmi");
+//            tmpFile.deleteOnExit();
+//            StreamResult result =
+//                new StreamResult(
+//                    new FileOutputStream(tmpFile));
+//
+//            Transformer transformer = stf.newTransformer();
+//            transformer.transform(transformSource, result);
+//
+//            return new InputSource(new FileInputStream(tmpFile));
+//
+//        } catch (SAXException e) {
+//            throw new XmiException(e);
+//        } catch (ParserConfigurationException e) {
+//            throw new XmiException(e);
+//        } catch (IOException e) {
+//            throw new XmiException(e);
+//        } catch (TransformerConfigurationException e) {
+//            throw new XmiException(e);
+//        } catch (TransformerException e) {
+//            throw new XmiException(e);
+//        }
+//
+//    }
     private InputSource chainedTransform(String[] styles, InputSource input)
-        throws XmiException {
-        SAXTransformerFactory stf =
-            (SAXTransformerFactory) TransformerFactory.newInstance();
-
-        // TODO: Reconfigure exception handling to distinguish between errors
-        // that are possible due to bad input data and those that represent
-        // unexpected processing errors.
+            throws XmiException {
+//     TODO: Reconfigure exception handling to distinguish between errors
+//     that are possible due to bad input data and those that represent
+//     unexpected processing errors.
+        SAXTransformerFactory stf;
         try {
-            // Set up reader to be first filter in chain
+            TransformerFactory tf = TransformerFactory.newInstance();
+            tf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+            if (!(tf instanceof SAXTransformerFactory)) {
+                throw new IllegalArgumentException("TransformerFactory is not a SAXTransformerFactory");
+            }
+
+            stf = (SAXTransformerFactory) tf;
+        } catch (TransformerConfigurationException | IllegalArgumentException e) {
+            throw new XmiException("Failed to create secure TransformerFactory", e);
+        }
+
+        try {
+            // Securely configure SAXParserFactory
             SAXParserFactory spf = SAXParserFactory.newInstance();
+            spf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            spf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            spf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            spf.setNamespaceAware(true);
+
             SAXParser parser = spf.newSAXParser();
             XMLReader last = parser.getXMLReader();
 
-            // Create filter for each style sheet and chain to previous
-            // filter/reader
-            for (int i = 0; i < styles.length; i++) {
-                String xsltFileName = STYLE_PATH + styles[i];
+            // Create filters for each XSLT stylesheet and chain them
+            for (String style : styles) {
+                String xsltFileName = STYLE_PATH + style;
                 URL xsltUrl = getClass().getResource(xsltFileName);
                 if (xsltUrl == null) {
-                    throw new IOException("Error opening XSLT style sheet : "
-                            + xsltFileName);
+                    throw new IOException("Error opening XSLT style sheet: " + xsltFileName);
                 }
-                StreamSource xsltStreamSource =
-                    new StreamSource(xsltUrl.openStream());
-                xsltStreamSource.setSystemId(xsltUrl.toExternalForm());
-                XMLFilter filter = stf.newXMLFilter(xsltStreamSource);
 
-                filter.setParent(last);
-                last = filter;
+                try (InputStream xsltStream = xsltUrl.openStream()) {
+                    StreamSource xsltStreamSource = new StreamSource(xsltStream);
+                    xsltStreamSource.setSystemId(xsltUrl.toExternalForm());
+                    XMLFilter filter = stf.newXMLFilter(xsltStreamSource);
+
+                    filter.setParent(last);
+                    last = filter;
+                }
             }
 
+            // Create a SAXSource for the transformation
             SAXSource transformSource = new SAXSource(last, input);
 
-            // Create temporary file for output
+           // Create temporary file for output
             // TODO: we should be able to chain this directly to XMI reader
             File tmpFile = File.createTempFile(TEMP_XMI_FILE_PREFIX, ".xmi");
             tmpFile.deleteOnExit();
-            StreamResult result =
-                new StreamResult(
-                    new FileOutputStream(tmpFile));
 
-            Transformer transformer = stf.newTransformer();
-            transformer.transform(transformSource, result);
+            try (FileOutputStream outputStream = new FileOutputStream(tmpFile)) {
+                StreamResult result = new StreamResult(outputStream);
 
-            return new InputSource(new FileInputStream(tmpFile));
+                Transformer transformer = stf.newTransformer();
+                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                transformer.transform(transformSource, result);
 
-        } catch (SAXException e) {
-            throw new XmiException(e);
-        } catch (ParserConfigurationException e) {
-            throw new XmiException(e);
-        } catch (IOException e) {
-            throw new XmiException(e);
-        } catch (TransformerConfigurationException e) {
-            throw new XmiException(e);
-        } catch (TransformerException e) {
-            throw new XmiException(e);
+                return new InputSource(new FileInputStream(tmpFile));
+            }
+
+        } catch (SAXException | ParserConfigurationException | IOException | TransformerException e) {
+            throw new XmiException("Transformation error", e);
         }
-
     }
+
 
     private InputSource serialTransform(String[] styles, InputSource input)
         throws UmlException {

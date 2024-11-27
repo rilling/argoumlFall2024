@@ -471,7 +471,6 @@ public class UmlFilePersister extends AbstractFilePersister {
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, ""); // Prevent stylesheet access
             Transformer transformer = factory.newTransformer(xsltStreamSource);
 
-
             File transformedFile = File.createTempFile("upgrade_" + version
                     + "_", ".uml");
             transformedFile.deleteOnExit();
