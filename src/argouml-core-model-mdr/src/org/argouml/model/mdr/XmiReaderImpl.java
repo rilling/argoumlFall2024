@@ -47,15 +47,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -671,36 +666,61 @@ class XmiReaderImpl implements XmiReader, UnknownElementsListener,
 
     }
 
-    private File copySource(InputSource input) throws IOException {
+    public File copySource(InputSource input) throws IOException {
         byte[] buf = new byte[2048];
         int len;
 
         // Create & set up temporary output file
         File tmpOutFile = File.createTempFile(TEMP_XMI_FILE_PREFIX, ".xmi");
         tmpOutFile.deleteOnExit();
-        try(FileOutputStream out = new FileOutputStream(tmpOutFile)) {
 
-            // TODO: Bob says - Coding by use of side effect here.
-            // Maybe this should be done in a clearer way but it fixes
-            // http://argouml.tigris.org/issues/show_bug.cgi?id=4978
-            // It seems that when loading an XMI that is not contained in a zip
-            // file then the InputStream given as the argument to this method
-            // can't be reused as it is at the end of the stream. In that case
-            // systemId appears to be none-null at this stage.
-            // So if systemId is not null we recreate the InputSource.
+        try (FileOutputStream out = new FileOutputStream(tmpOutFile)) {
             String systemId = input.getSystemId();
             if (systemId != null) {
+                // Validate the systemId URL
+                if (!isValidURL(systemId)) {
+                    throw new IOException("Invalid or unsafe URL: " + systemId);
+                }
+
+                // Safely recreate the InputSource
                 input = new InputSource(new URL(systemId).openStream());
             }
 
             InputStream in = input.getByteStream();
-
             while ((len = in.read(buf)) >= 0) {
                 out.write(buf, 0, len);
             }
         }
+
         LOG.log(Level.FINE, "Wrote copied XMI file to {0}", tmpOutFile);
         return tmpOutFile;
+    }
+
+    /**
+     * Validates that a URL is safe and conforms to specific security rules.
+     *
+     * @param url The URL to validate.
+     * @return true if the URL is valid and safe; false otherwise.
+     */
+    private boolean isValidURL(String url) {
+        try {
+            URL parsedUrl = new URL(url);
+
+            // Check the protocol is HTTP or HTTPS
+            if (!"http".equalsIgnoreCase(parsedUrl.getProtocol())
+                    && !"https".equalsIgnoreCase(parsedUrl.getProtocol())) {
+                return false;
+            }
+
+            // Restrict to specific domains (optional)
+            String host = parsedUrl.getHost();
+            List<String> allowedHosts = Arrays.asList("example.com", "another-allowed-domain.com");
+            return allowedHosts.contains(host);
+
+        } catch (MalformedURLException e) {
+            // Invalid URL format
+            return false;
+        }
     }
 
     private static final String UML_13_ELEMENTS[] =
