@@ -232,7 +232,11 @@ public class FigStubState extends FigStateVertex {
     @Override
     protected void setStandardBounds(int theX, int theY, int theW, int theH) {
         Rectangle oldBounds = getBounds();
-        theW = 60;
+        
+        if(theW == 0)
+        {
+            theW = 60;
+        }
 
         referenceFig.setBounds(theX, theY, theW,
                 referenceFig.getBounds().height);
