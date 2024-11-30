@@ -265,27 +265,28 @@ public class Critic
      * call {@link Agency#register(Critic, Object)} with that instance.
      */
     public Critic() {
-	/* TODO:  THIS IS A HACK.
-	 * A much better way of doing this would be not to start
-	 * the critic in the first place.
-	 */
-	if (Configuration.getBoolean(getCriticKey(), true)) {
-	    addControlRec(ENABLED, Boolean.TRUE);
-	    isActive = true;
-	} else {
-	    addControlRec(ENABLED, Boolean.FALSE);
-	    isActive = false;
-	}
-	addControlRec(SNOOZE_ORDER, new SnoozeOrder());
-	criticType = "correctness";
-	knowledgeTypes.add(KT_CORRECTNESS);
-	decisionCategory = "Checking";
+        initializeCritic();
+    }
 
-	moreInfoURL = defaultMoreInfoURL();
-	description = Translator.localize("misc.critic.no-description");
-	headline = Translator.messageFormat("misc.critic.default-headline",
-	        new Object[] {getClass().getName()});
-	priority = ToDoItem.MED_PRIORITY;
+
+    private void initializeCritic() {
+        if (Configuration.getBoolean(getCriticKey(), true)) {
+            addControlRec(ENABLED, Boolean.TRUE);
+            isActive = true;
+        } else {
+            addControlRec(ENABLED, Boolean.FALSE);
+            isActive = false;
+        }
+        addControlRec(SNOOZE_ORDER, new SnoozeOrder());
+        criticType = "correctness";
+        knowledgeTypes.add(KT_CORRECTNESS);
+        decisionCategory = "Checking";
+
+        moreInfoURL = defaultMoreInfoURL();
+        description = Translator.localize("misc.critic.no-description");
+        headline = Translator.messageFormat("misc.critic.default-headline",
+                new Object[] {getClass().getName()});
+        priority = ToDoItem.MED_PRIORITY;
     }
 
     /**
