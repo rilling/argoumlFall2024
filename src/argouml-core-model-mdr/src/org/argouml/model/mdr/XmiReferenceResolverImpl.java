@@ -48,12 +48,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -102,14 +97,14 @@ import org.xml.sax.InputSource;
 class XmiReferenceResolverImpl extends XmiContext {
 
     private static final Logger LOG =
-        Logger.getLogger(XmiReferenceResolverImpl.class.getName());
+            Logger.getLogger(XmiReferenceResolverImpl.class.getName());
 
     /**
      * Map of href/id to object.  IDs for top level document will have no
      * leading URL piece while others will be in <url>#<id> form
      */
     private Map<String, Map<String, Object>> idToObject =
-        Collections.synchronizedMap(new HashMap<String, Map<String, Object>>());
+            Collections.synchronizedMap(new HashMap<String, Map<String, Object>>());
 
     /**
      * Map indexed by MOF ID containing XmiReference objects.
@@ -176,13 +171,13 @@ class XmiReferenceResolverImpl extends XmiContext {
      */
     // CHECKSTYLE:OFF - ignore too many parameters since API is fixed by MDR
     XmiReferenceResolverImpl(RefPackage[] extents, XMIInputConfig config,
-            Map<String, XmiReference> objectToXmiref,
-            Map<String, String> publicIds,
-            Map<String, Map<String, Object>> idToObject,
-            List<String> searchDirs,
-            boolean isProfile, String publicId, String systemId,
-            MDRModelImplementation modelImplementation) {
-    // CHECKSTYLE:ON
+                             Map<String, XmiReference> objectToXmiref,
+                             Map<String, String> publicIds,
+                             Map<String, Map<String, Object>> idToObject,
+                             List<String> searchDirs,
+                             boolean isProfile, String publicId, String systemId,
+                             MDRModelImplementation modelImplementation) {
+        // CHECKSTYLE:ON
         super(extents, config);
         modelImpl = modelImplementation;
         mofidToXmiref = objectToXmiref;
@@ -226,7 +221,7 @@ class XmiReferenceResolverImpl extends XmiContext {
      */
     @Override
     public void register(final String systemId, final String xmiId,
-            final RefObject object) {
+                         final RefObject object) {
 
         LOG.log(Level.FINE,
                 "Registering XMI ID {0} in system ID {1} to object with MOF ID {2}",
@@ -277,7 +272,7 @@ class XmiReferenceResolverImpl extends XmiContext {
                 // can resolve all references
                 super.register(resolvedSystemId, xmiId, object);
             } else {
-               LOG.log(Level.SEVERE, "Collision - multiple elements with same xmi.id : "
+                LOG.log(Level.SEVERE, "Collision - multiple elements with same xmi.id : "
                         + xmiId);
                 throw new IllegalStateException(
                         "Multiple elements with same xmi.id");
@@ -520,7 +515,7 @@ class XmiReferenceResolverImpl extends XmiContext {
      * see org.andromda.repositories.mdr.MDRXmiReferenceResolverContext
      */
     protected static final String[] CLASSPATH_MODEL_SUFFIXES =
-        new String[] {"xml", "xmi", };
+            new String[] {"xml", "xmi", };
 
     /**
      * Searches for the model URL on the classpath.
@@ -602,45 +597,77 @@ class XmiReferenceResolverImpl extends XmiContext {
         InputStream stream = null;
         URL url = null;
         try {
+            // Validate the input URL
+            if (systemId == null || (!systemId.startsWith("http://") && !systemId.startsWith("https://"))) {
+                throw new MalformedURLException("Invalid URL format or protocol");
+            }
+
             url = new URL(systemId);
-            // Validate the protocol
-            if (!url.getProtocol().equalsIgnoreCase("http") && !url.getProtocol().equalsIgnoreCase("https")) {
-                throw new IOException("Invalid protocol: " + url.getProtocol());
+
+            // Enforce domain whitelist
+            if (!isAllowedDomain(url)) {
+                throw new SecurityException("Domain not allowed");
             }
-            // Validate the host to ensure it's not a private or loopback address
-            InetAddress address = InetAddress.getByName(url.getHost());
-            if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isSiteLocalAddress()) {
-                throw new IOException("Invalid host: " + url.getHost());
-            }
+
             URLConnection connection = url.openConnection();
+
+            // Set timeouts to prevent resource exhaustion
+            connection.setConnectTimeout(5000); // 5 seconds
+            connection.setReadTimeout(5000);    // 5 seconds
+
+            stream = connection.getInputStream();
+
             if (connection instanceof HttpURLConnection) {
-                HttpURLConnection httpConnection = (HttpURLConnection) connection;
+                HttpURLConnection huc = (HttpURLConnection) connection;
+                if (huc.getResponseCode() / 100 == 3) { // Handle redirects
+                    String whereto = huc.getHeaderField("Location");
+                    URL redirectUrl = new URL(whereto);
 
-                // Prevent automatic redirects
-                httpConnection.setInstanceFollowRedirects(false);
+                    // Validate and restrict redirects
+                    if (!isAllowedDomain(redirectUrl)) {
+                        throw new SecurityException("Redirected domain not allowed");
+                    }
 
-                // Check the response code
-                int responseCode = httpConnection.getResponseCode();
-                if (responseCode >= 300 && responseCode < 400) {
-                    throw new IOException("Redirect detected to: " + httpConnection.getHeaderField("Location"));
+                    connection = redirectUrl.openConnection();
+                    stream = connection.getInputStream();
                 }
+            } else if (connection instanceof HttpsURLConnection) {
+                HttpsURLConnection hsuc = (HttpsURLConnection) connection;
+                if (hsuc.getResponseCode() / 100 == 3) { // Handle redirects
+                    String whereto = hsuc.getHeaderField("Location");
+                    URL redirectUrl = new URL(whereto);
 
-                stream = httpConnection.getInputStream();
+                    // Validate and restrict redirects
+                    if (!isAllowedDomain(redirectUrl)) {
+                        throw new SecurityException("Redirected domain not allowed");
+                    }
+
+                    connection = redirectUrl.openConnection();
+                    stream = connection.getInputStream();
+                }
             }
+        } catch (MalformedURLException e) {
+            url = null; // Log error if necessary
         } catch (IOException e) {
-            System.err.println("Error validating URL: " + e.getMessage());
-            url = null;
+            url = null; // Log error if necessary
         } finally {
             if (stream != null) {
                 try {
                     stream.close();
                 } catch (IOException e) {
-                    System.err.println("Error closing stream: " + e.getMessage());
+                    // Log error if necessary
                 }
             }
         }
         return url;
     }
+
+    // Helper method to enforce allowed domains
+    private boolean isAllowedDomain(URL url) {
+        List<String> allowedDomains = Arrays.asList("argouml.org", "github.io");
+        return allowedDomains.contains(url.getHost());
+    }
+
 
     /////////////////////////////////////////////////////
     ////////// End AndroMDA Code //////////////////////
