@@ -87,7 +87,7 @@ class ZargoFilePersister extends UmlFilePersister {
      * Logger.
      */
     private static final Logger LOG =
-        Logger.getLogger(ZargoFilePersister.class.getName());
+            Logger.getLogger(ZargoFilePersister.class.getName());
 
     /**
      * The constructor.
@@ -128,7 +128,7 @@ class ZargoFilePersister extends UmlFilePersister {
      */
     @Override
     public void doSave(Project project, File file) throws SaveException,
-    InterruptedException {
+            InterruptedException {
 
         LOG.log(Level.INFO, "Saving");
         /* Retain the previous project file even when the save operation
@@ -173,7 +173,7 @@ class ZargoFilePersister extends UmlFilePersister {
                     stream.putNextEntry(
                             new ZipEntry(projectMember.getZipName()));
                     MemberFilePersister persister =
-                        getMemberFilePersister(projectMember);
+                            getMemberFilePersister(projectMember);
                     persister.save(projectMember, stream);
                 }
             }
@@ -320,7 +320,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private Project loadFromZargo(File file, ProgressMgr progressMgr)
-        throws OpenException {
+            throws OpenException {
 
         Project p = ProjectFactory.getInstance().createProject(file.toURI());
         try {
@@ -355,7 +355,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
                     LOG.log(Level.INFO,
                             "Loading member with "
-                            + persister.getClass().getName());
+                                    + persister.getClass().getName());
 
                     url = makeZipEntryUrl(toURL(file), name);
                     persister.load(p, new InputSource(url.toExternalForm()));
@@ -383,14 +383,14 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private File zargoToUml(File file, ProgressMgr progressMgr)
-        throws OpenException, InterruptedException {
+            throws OpenException, InterruptedException {
 
         File combinedFile = null;
         try {
             combinedFile = File.createTempFile("combinedzargo_", ".uml");
             LOG.log(Level.INFO,
                     "Combining old style zargo sub files "
-                    + "into new style uml file {0}",
+                            + "into new style uml file {0}",
                     combinedFile.getAbsolutePath());
 
             combinedFile.deleteOnExit();
@@ -398,8 +398,8 @@ class ZargoFilePersister extends UmlFilePersister {
             String encoding = Argo.getEncoding();
             FileOutputStream stream = new FileOutputStream(combinedFile);
             PrintWriter writer =
-                new PrintWriter(new BufferedWriter(
-                        new OutputStreamWriter(stream, encoding)));
+                    new PrintWriter(new BufferedWriter(
+                            new OutputStreamWriter(stream, encoding)));
 
             writer.println("<?xml version = \"1.0\" " + "encoding = \""
                     + encoding + "\" ?>");
@@ -432,8 +432,8 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private void copyArgo(File file, String encoding, PrintWriter writer)
-        throws IOException, MalformedURLException, OpenException,
-        UnsupportedEncodingException {
+            throws IOException, MalformedURLException, OpenException,
+            UnsupportedEncodingException {
 
         int pgmlCount = getPgmlCount(file);
         boolean containsToDo = containsTodo(file);
@@ -441,7 +441,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
         // first read the .argo file from Zip
         ZipInputStream zis =
-            openZipStreamAt(toURL(file), FileConstants.PROJECT_FILE_EXT);
+                openZipStreamAt(toURL(file), FileConstants.PROJECT_FILE_EXT);
 
         if (zis == null) {
             throw new OpenException(
@@ -450,7 +450,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
         String line;
         BufferedReader reader =
-            new BufferedReader(new InputStreamReader(zis, encoding));
+                new BufferedReader(new InputStreamReader(zis, encoding));
         // Keep reading till we hit the <argo> tag
         String rootLine;
         do {
@@ -497,8 +497,8 @@ class ZargoFilePersister extends UmlFilePersister {
     }
 
     private void copyXmi(File file, String encoding, PrintWriter writer)
-        throws IOException, MalformedURLException,
-        UnsupportedEncodingException {
+            throws IOException, MalformedURLException,
+            UnsupportedEncodingException {
 
         ZipInputStream zis = openZipStreamAt(toURL(file), ".xmi");
         BufferedReader reader = new BufferedReader(
@@ -514,7 +514,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private void copyDiagrams(File file, String encoding, PrintWriter writer)
-        throws IOException {
+            throws IOException {
 
         // Loop round loading the diagrams
         ZipInputStream zis = new ZipInputStream(toURL(file).openStream());
@@ -546,8 +546,8 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private void copyMember(File file, String tag, String outputEncoding,
-            PrintWriter writer) throws IOException, MalformedURLException,
-                UnsupportedEncodingException {
+                            PrintWriter writer) throws IOException, MalformedURLException,
+            UnsupportedEncodingException {
 
         ZipInputStream zis = openZipStreamAt(toURL(file), "." + tag);
 
@@ -602,7 +602,7 @@ class ZargoFilePersister extends UmlFilePersister {
      *             if there is a problem opening the file.
      */
     private ZipInputStream openZipStreamAt(URL url, String ext)
-        throws IOException {
+            throws IOException {
         ZipInputStream zis = new ZipInputStream(url.openStream());
         ZipEntry entry = zis.getNextEntry();
         while (entry != null && !entry.getName().endsWith(ext)) {
@@ -616,12 +616,12 @@ class ZargoFilePersister extends UmlFilePersister {
     }
 
     private InputStream openZipEntry(URL url, String entryName)
-        throws MalformedURLException, IOException {
+            throws MalformedURLException, IOException {
         return makeZipEntryUrl(url, entryName).openStream();
     }
 
     private URL makeZipEntryUrl(URL url, String entryName)
-        throws MalformedURLException {
+            throws MalformedURLException {
         String entryURL = "jar:" + url + "!/" + entryName;
         return new URL(entryURL);
     }
@@ -682,7 +682,7 @@ class ZargoFilePersister extends UmlFilePersister {
      * If the extension is null, all entries are returned.
      */
     private List<String> getEntryNames(File file, String extension)
-        throws IOException, MalformedURLException {
+            throws IOException, MalformedURLException {
 
         ZipInputStream zis = new ZipInputStream(toURL(file).openStream());
         List<String> result = new ArrayList<String>();

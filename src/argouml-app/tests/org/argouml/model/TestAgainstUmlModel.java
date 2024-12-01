@@ -47,6 +47,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -224,8 +225,15 @@ public class TestAgainstUmlModel extends TestCase {
      */
     private static Document prepareDocument()
 	throws ParserConfigurationException, SAXException, IOException {
-	DocumentBuilder builder =
-	    DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+        // Secure against XXE
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
 	String fileName = System.getProperty("test.model.uml");
 	if (fileName == null) {
 	    printInconclusiveMessage("The property test.model.uml "

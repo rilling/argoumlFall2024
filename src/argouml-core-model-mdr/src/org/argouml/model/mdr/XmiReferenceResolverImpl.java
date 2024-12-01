@@ -97,14 +97,14 @@ import org.xml.sax.InputSource;
 class XmiReferenceResolverImpl extends XmiContext {
 
     private static final Logger LOG =
-        Logger.getLogger(XmiReferenceResolverImpl.class.getName());
+            Logger.getLogger(XmiReferenceResolverImpl.class.getName());
 
     /**
      * Map of href/id to object.  IDs for top level document will have no
      * leading URL piece while others will be in <url>#<id> form
      */
     private Map<String, Map<String, Object>> idToObject =
-        Collections.synchronizedMap(new HashMap<String, Map<String, Object>>());
+            Collections.synchronizedMap(new HashMap<String, Map<String, Object>>());
 
     /**
      * Map indexed by MOF ID containing XmiReference objects.
@@ -171,13 +171,13 @@ class XmiReferenceResolverImpl extends XmiContext {
      */
     // CHECKSTYLE:OFF - ignore too many parameters since API is fixed by MDR
     XmiReferenceResolverImpl(RefPackage[] extents, XMIInputConfig config,
-            Map<String, XmiReference> objectToXmiref,
-            Map<String, String> publicIds,
-            Map<String, Map<String, Object>> idToObject,
-            List<String> searchDirs,
-            boolean isProfile, String publicId, String systemId,
-            MDRModelImplementation modelImplementation) {
-    // CHECKSTYLE:ON
+                             Map<String, XmiReference> objectToXmiref,
+                             Map<String, String> publicIds,
+                             Map<String, Map<String, Object>> idToObject,
+                             List<String> searchDirs,
+                             boolean isProfile, String publicId, String systemId,
+                             MDRModelImplementation modelImplementation) {
+        // CHECKSTYLE:ON
         super(extents, config);
         modelImpl = modelImplementation;
         mofidToXmiref = objectToXmiref;
@@ -221,7 +221,7 @@ class XmiReferenceResolverImpl extends XmiContext {
      */
     @Override
     public void register(final String systemId, final String xmiId,
-            final RefObject object) {
+                         final RefObject object) {
 
         LOG.log(Level.FINE,
                 "Registering XMI ID {0} in system ID {1} to object with MOF ID {2}",
@@ -272,7 +272,7 @@ class XmiReferenceResolverImpl extends XmiContext {
                 // can resolve all references
                 super.register(resolvedSystemId, xmiId, object);
             } else {
-               LOG.log(Level.SEVERE, "Collision - multiple elements with same xmi.id : "
+                LOG.log(Level.SEVERE, "Collision - multiple elements with same xmi.id : "
                         + xmiId);
                 throw new IllegalStateException(
                         "Multiple elements with same xmi.id");
@@ -515,7 +515,7 @@ class XmiReferenceResolverImpl extends XmiContext {
      * see org.andromda.repositories.mdr.MDRXmiReferenceResolverContext
      */
     protected static final String[] CLASSPATH_MODEL_SUFFIXES =
-        new String[] {"xml", "xmi", };
+            new String[] {"xml", "xmi", };
 
     /**
      * Searches for the model URL on the classpath.
