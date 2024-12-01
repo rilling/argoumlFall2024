@@ -75,8 +75,9 @@ public class DecisionModel extends Observable implements Serializable {
      * @return the list of decisions
      */
     public List<Decision> getDecisionList() {
-        return decisions;
+        return new ArrayList<>(decisions); 
     }
+
 
     /**
      * This function sets the priority of an existing decision, or
