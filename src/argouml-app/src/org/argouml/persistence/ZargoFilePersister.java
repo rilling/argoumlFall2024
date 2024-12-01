@@ -39,15 +39,27 @@
 
 package org.argouml.persistence;
 
-import java.io.*;
-import java.net.InetAddress;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -75,7 +87,7 @@ class ZargoFilePersister extends UmlFilePersister {
      * Logger.
      */
     private static final Logger LOG =
-        Logger.getLogger(ZargoFilePersister.class.getName());
+            Logger.getLogger(ZargoFilePersister.class.getName());
 
     /**
      * The constructor.
@@ -116,7 +128,7 @@ class ZargoFilePersister extends UmlFilePersister {
      */
     @Override
     public void doSave(Project project, File file) throws SaveException,
-    InterruptedException {
+            InterruptedException {
 
         LOG.log(Level.INFO, "Saving");
         /* Retain the previous project file even when the save operation
@@ -161,7 +173,7 @@ class ZargoFilePersister extends UmlFilePersister {
                     stream.putNextEntry(
                             new ZipEntry(projectMember.getZipName()));
                     MemberFilePersister persister =
-                        getMemberFilePersister(projectMember);
+                            getMemberFilePersister(projectMember);
                     persister.save(projectMember, stream);
                 }
             }
@@ -222,10 +234,93 @@ class ZargoFilePersister extends UmlFilePersister {
     /*
      * @see org.argouml.persistence.ProjectFilePersister#doLoad(java.io.File)
      */
+    @Override
+    public Project doLoad(File file)
+            throws OpenException, InterruptedException {
+
+        ProgressMgr progressMgr = new ProgressMgr();
+        progressMgr.setNumberOfPhases(3 + UML_PHASES_LOAD);
+        ThreadUtils.checkIfInterrupted();
+
+        int fileVersion;
+        String releaseVersion;
+        try {
+            String argoEntry = getEntryNames(file, ".argo").iterator().next();
+
+            // Validate the argoEntry for safety
+            if (!isValidEntryName(argoEntry)) {
+                throw new OpenException("Invalid or unsafe .argo entry name");
+            }
+
+            URL argoUrl = makeZipEntryUrl(toURL(file), argoEntry);
+
+            // Validate the URL for SSRF prevention
+            if (!isValidUrl(argoUrl)) {
+                throw new OpenException("Invalid or unsafe URL detected");
+            }
+
+            // Safely open the stream and close it properly
+            try (InputStream argoStream = argoUrl.openStream()) {
+                fileVersion = getPersistenceVersion(argoStream);
+            }
+
+            try (InputStream argoStream = argoUrl.openStream()) {
+                releaseVersion = getReleaseVersion(argoStream);
+            }
+        } catch (MalformedURLException e) {
+            throw new OpenException(e);
+        } catch (IOException e) {
+            throw new OpenException(e);
+        }
+
+        boolean upgradeRequired = true;
+
+        // Disable upgrade for UML2 projects
+        if (Model.getFacade().getUmlVersion().charAt(0) == '2') {
+            upgradeRequired = false;
+        }
+
+        LOG.log(Level.INFO, "Loading zargo file of version {0}", fileVersion);
+
+        final Project p;
+        if (upgradeRequired) {
+            File combinedFile = zargoToUml(file, progressMgr);
+            p = super.doLoad(file, combinedFile, progressMgr);
+        } else {
+            p = loadFromZargo(file, progressMgr);
+        }
+
+        progressMgr.nextPhase();
+
+        PersistenceManager.getInstance().setProjectURI(file.toURI(), p);
+        return p;
+    }
+
+    // Utility to validate entry name (only alphanumeric and limited special chars allowed)
+    private static boolean isValidEntryName(String entryName) {
+        String allowedPattern = "^[a-zA-Z0-9_.-]+$";
+        return entryName != null && Pattern.matches(allowedPattern, entryName);
+    }
+
+    // Utility to validate URL for SSRF prevention
+    private static boolean isValidUrl(URL url) {
+        //     String protocol = url.getProtocol();
+//        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+//            return false;
+//        }
+
+        // Restrict access to private/internal networks
+        String host = url.getHost();
+        if ("localhost".equalsIgnoreCase(host) || host.startsWith("127.") || host.startsWith("10.") || host.startsWith("192.168.")) {
+            return false;
+        }
+
+        return true;
+    }
 
 
     private Project loadFromZargo(File file, ProgressMgr progressMgr)
-        throws OpenException {
+            throws OpenException {
 
         Project p = ProjectFactory.getInstance().createProject(file.toURI());
         try {
@@ -260,7 +355,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
                     LOG.log(Level.INFO,
                             "Loading member with "
-                            + persister.getClass().getName());
+                                    + persister.getClass().getName());
 
                     url = makeZipEntryUrl(toURL(file), name);
                     persister.load(p, new InputSource(url.toExternalForm()));
@@ -288,14 +383,14 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private File zargoToUml(File file, ProgressMgr progressMgr)
-        throws OpenException, InterruptedException {
+            throws OpenException, InterruptedException {
 
         File combinedFile = null;
         try {
             combinedFile = File.createTempFile("combinedzargo_", ".uml");
             LOG.log(Level.INFO,
                     "Combining old style zargo sub files "
-                    + "into new style uml file {0}",
+                            + "into new style uml file {0}",
                     combinedFile.getAbsolutePath());
 
             combinedFile.deleteOnExit();
@@ -303,8 +398,8 @@ class ZargoFilePersister extends UmlFilePersister {
             String encoding = Argo.getEncoding();
             FileOutputStream stream = new FileOutputStream(combinedFile);
             PrintWriter writer =
-                new PrintWriter(new BufferedWriter(
-                        new OutputStreamWriter(stream, encoding)));
+                    new PrintWriter(new BufferedWriter(
+                            new OutputStreamWriter(stream, encoding)));
 
             writer.println("<?xml version = \"1.0\" " + "encoding = \""
                     + encoding + "\" ?>");
@@ -337,8 +432,8 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private void copyArgo(File file, String encoding, PrintWriter writer)
-        throws IOException, MalformedURLException, OpenException,
-        UnsupportedEncodingException {
+            throws IOException, MalformedURLException, OpenException,
+            UnsupportedEncodingException {
 
         int pgmlCount = getPgmlCount(file);
         boolean containsToDo = containsTodo(file);
@@ -346,7 +441,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
         // first read the .argo file from Zip
         ZipInputStream zis =
-            openZipStreamAt(toURL(file), FileConstants.PROJECT_FILE_EXT);
+                openZipStreamAt(toURL(file), FileConstants.PROJECT_FILE_EXT);
 
         if (zis == null) {
             throw new OpenException(
@@ -355,7 +450,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
         String line;
         BufferedReader reader =
-            new BufferedReader(new InputStreamReader(zis, encoding));
+                new BufferedReader(new InputStreamReader(zis, encoding));
         // Keep reading till we hit the <argo> tag
         String rootLine;
         do {
@@ -402,8 +497,8 @@ class ZargoFilePersister extends UmlFilePersister {
     }
 
     private void copyXmi(File file, String encoding, PrintWriter writer)
-        throws IOException, MalformedURLException,
-        UnsupportedEncodingException {
+            throws IOException, MalformedURLException,
+            UnsupportedEncodingException {
 
         ZipInputStream zis = openZipStreamAt(toURL(file), ".xmi");
         BufferedReader reader = new BufferedReader(
@@ -419,7 +514,7 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private void copyDiagrams(File file, String encoding, PrintWriter writer)
-        throws IOException {
+            throws IOException {
 
         // Loop round loading the diagrams
         ZipInputStream zis = new ZipInputStream(toURL(file).openStream());
@@ -451,8 +546,8 @@ class ZargoFilePersister extends UmlFilePersister {
 
 
     private void copyMember(File file, String tag, String outputEncoding,
-            PrintWriter writer) throws IOException, MalformedURLException,
-                UnsupportedEncodingException {
+                            PrintWriter writer) throws IOException, MalformedURLException,
+            UnsupportedEncodingException {
 
         ZipInputStream zis = openZipStreamAt(toURL(file), "." + tag);
 
@@ -507,7 +602,7 @@ class ZargoFilePersister extends UmlFilePersister {
      *             if there is a problem opening the file.
      */
     private ZipInputStream openZipStreamAt(URL url, String ext)
-        throws IOException {
+            throws IOException {
         ZipInputStream zis = new ZipInputStream(url.openStream());
         ZipEntry entry = zis.getNextEntry();
         while (entry != null && !entry.getName().endsWith(ext)) {
@@ -521,10 +616,15 @@ class ZargoFilePersister extends UmlFilePersister {
     }
 
     private InputStream openZipEntry(URL url, String entryName)
-        throws MalformedURLException, IOException {
+            throws MalformedURLException, IOException {
         return makeZipEntryUrl(url, entryName).openStream();
     }
 
+    private URL makeZipEntryUrl(URL url, String entryName)
+            throws MalformedURLException {
+        String entryURL = "jar:" + url + "!/" + entryName;
+        return new URL(entryURL);
+    }
 
     /**
      * A stream of input streams for reading the Zipped file.
@@ -581,135 +681,21 @@ class ZargoFilePersister extends UmlFilePersister {
      * Get a list of zip file entries which end with the given extension.
      * If the extension is null, all entries are returned.
      */
-
-    @Override
-    public Project doLoad(File file)
-            throws OpenException, InterruptedException {
-
-        ProgressMgr progressMgr = new ProgressMgr();
-        progressMgr.setNumberOfPhases(3 + UML_PHASES_LOAD);
-        ThreadUtils.checkIfInterrupted();
-
-        int fileVersion;
-        String releaseVersion;
-        try {
-            // Validate the zip file structure
-            validateZipFile(file);
-
-            String argoEntry = getEntryNames(file, ".argo").iterator().next();
-            // Validate entry name
-            validateZipEntryName(argoEntry);
-
-            // Read zip entry contents securely
-            String argoContent = getZipEntryContent(file, argoEntry);
-            fileVersion = getPersistenceVersion(new ByteArrayInputStream(argoContent.getBytes(StandardCharsets.UTF_8)));
-            releaseVersion = getReleaseVersion(new ByteArrayInputStream(argoContent.getBytes(StandardCharsets.UTF_8)));
-        } catch (MalformedURLException e) {
-            throw new OpenException(e);
-        } catch (IOException e) {
-            throw new OpenException(e);
-        }
-
-        boolean upgradeRequired = true;
-        if (Model.getFacade().getUmlVersion().charAt(0) == '2') {
-            upgradeRequired = false;
-        }
-
-        LOG.log(Level.INFO, "Loading zargo file of version {0}", fileVersion);
-
-        final Project p;
-        if (upgradeRequired) {
-            File combinedFile = zargoToUml(file, progressMgr);
-            p = super.doLoad(file, combinedFile, progressMgr);
-        } else {
-            p = loadFromZargo(file, progressMgr);
-        }
-
-        progressMgr.nextPhase();
-        PersistenceManager.getInstance().setProjectURI(file.toURI(), p);
-        return p;
-    }
-
-    /**
-     * Extracts the content of a specific zip entry as a string.
-     */
-    private String getZipEntryContent(File file, String entryName) throws IOException {
-        try (ZipInputStream zis = new ZipInputStream(toURL(file).openStream())) {
-            ZipEntry entry;
-            while ((entry = zis.getNextEntry()) != null) {
-                if (entry.getName().equals(entryName)) {
-                    // Read entry content into a string
-                    return new String(zis.readAllBytes(), StandardCharsets.UTF_8);
-                }
-            }
-        }
-        throw new IOException("Entry " + entryName + " not found in the zip file.");
-    }
-
-    private URL makeZipEntryUrl(URL url, String entryName)
-            throws MalformedURLException {
-        if (!url.getProtocol().equals("file")) {
-            throw new MalformedURLException("Only local file URLs are allowed.");
-        }
-        String entryURL = "jar:" + url + "!/" + entryName;
-        return new URL(entryURL);
-    }
-
     private List<String> getEntryNames(File file, String extension)
             throws IOException, MalformedURLException {
-        List<String> result = new ArrayList<>();
-        try (ZipInputStream zis = new ZipInputStream(toURL(file).openStream())) {
-            ZipEntry entry = zis.getNextEntry();
-            while (entry != null) {
-                String name = entry.getName();
-                try {
-                    validateZipEntryName(name);  // Validate entry names
-                } catch (OpenException e) {
-                    throw new RuntimeException(e);
-                }
-                if (extension == null || name.endsWith(extension)) {
-                    result.add(name);
-                }
-                entry = zis.getNextEntry();
+
+        ZipInputStream zis = new ZipInputStream(toURL(file).openStream());
+        List<String> result = new ArrayList<String>();
+        ZipEntry entry = zis.getNextEntry();
+        while (entry != null) {
+            String name = entry.getName();
+            if (extension == null || name.endsWith(extension)) {
+                result.add(name);
             }
+            entry = zis.getNextEntry();
         }
+        zis.close();
         return result;
-    }
-
-    private void validateZipFile(File file) throws OpenException {
-        if (file == null || !file.exists() || !file.isFile()) {
-            throw new OpenException("Invalid or non-existent zip file.");
-        }
-        try (ZipInputStream zis = new ZipInputStream(toURL(file).openStream())) {
-            if (zis.getNextEntry() == null) {
-                throw new OpenException("Zip file is empty or invalid.");
-            }
-        } catch (IOException e) {
-            throw new OpenException("Failed to validate zip file.", e);
-        }
-    }
-
-    private void validateZipEntryName(String entryName) throws OpenException {
-        if (entryName == null || entryName.contains("..") || entryName.startsWith("/")) {
-            throw new OpenException("Invalid zip entry name: " + entryName);
-        }
-    }
-
-    private void validateUrl(URL url) throws OpenException {
-        try {
-            // Resolve the host from the URL
-            InetAddress address = InetAddress.getByName(url.getHost());
-
-            // Check if the resolved IP address is a local or private IP
-            if (address.isLoopbackAddress() || address.isSiteLocalAddress()) {
-                return; // Allow loopback and private addresses
-            }
-
-            // Optionally, block all external addresses
-            throw new OpenException("Access to external URLs is not allowed: " + url);
-        } catch (Exception e) {
-            throw new OpenException("Failed to validate URL: " + url, e);
-        }
     }
 
 
