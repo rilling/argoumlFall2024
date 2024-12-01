@@ -349,7 +349,7 @@ public class FigConcurrentRegion extends FigState
         int y = oldBounds.y + yInc;
         int h = oldBounds.height + hInc;
 
-        updateShapeBounds(x, y, w, h, nameDim, oldBounds);
+        updateBounds(x, y, w, h, oldBounds);
     }
 
     /**
@@ -370,7 +370,7 @@ public class FigConcurrentRegion extends FigState
         int w = oldBounds.width;
         int h = oldBounds.height + hInc;
 
-        updateShapeBounds(x, y, w, h, nameDim, oldBounds);
+        updateBounds(x, y, w, h, oldBounds);
     }
 
     ////////////////////////////////////////////////////////////////

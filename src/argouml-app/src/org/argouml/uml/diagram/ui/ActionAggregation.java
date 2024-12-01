@@ -57,13 +57,13 @@ import org.tigris.gef.presentation.Fig;
  *
  */
 public class ActionAggregation extends UndoableAction {
-    
+
     public static final int NONE = 0;
     public static final int AGGREGATE_END1 = 1;
     public static final int AGGREGATE_END2 = 2;
     public static final int COMPOSITE_END1 = 3;
     public static final int COMPOSITE_END2 = 4;
-    
+
     private String str = "";
     private Object agg = null;
 
@@ -76,29 +76,29 @@ public class ActionAggregation extends UndoableAction {
 
     // aggregation
     private static UndoableAction srcAgg =
-	new ActionAggregation(
-	        Model.getAggregationKind().getAggregate(), "src");
+            new ActionAggregation(
+                    Model.getAggregationKind().getAggregate(), "src");
     private static UndoableAction destAgg =
-	new ActionAggregation(
-	        Model.getAggregationKind().getAggregate(), "dest");
+            new ActionAggregation(
+                    Model.getAggregationKind().getAggregate(), "dest");
 
     private static UndoableAction srcAggComposite =
-	new ActionAggregation(
-	        Model.getAggregationKind().getComposite(), "src");
+            new ActionAggregation(
+                    Model.getAggregationKind().getComposite(), "src");
     private static UndoableAction destAggComposite =
-	new ActionAggregation(
-	        Model.getAggregationKind().getComposite(), "dest");
+            new ActionAggregation(
+                    Model.getAggregationKind().getComposite(), "dest");
 
     private static UndoableAction srcAggNone =
-	new ActionAggregation(Model.getAggregationKind().getNone(), "src");
+            new ActionAggregation(Model.getAggregationKind().getNone(), "src");
     private static UndoableAction destAggNone =
-	new ActionAggregation(
-	        Model.getAggregationKind().getNone(), "dest");
+            new ActionAggregation(
+                    Model.getAggregationKind().getNone(), "dest");
 
 
     ////////////////////////////////////////////////////////////////
     // constructors
-    
+
     /**
      * The <code>ActionNavigability</code> constructor.
      *
@@ -113,12 +113,12 @@ public class ActionAggregation extends UndoableAction {
      * @return the constructed class
      */
     public static ActionAggregation newActionAggregation(Object assocStart,
-                                                           Object assocEnd,
-                                                           int aggr) {
+                                                         Object assocEnd,
+                                                         int aggr) {
         return new ActionAggregation(getDescription(assocStart, assocEnd, aggr),
-                                      assocStart,
-                                      assocEnd,
-                                      aggr);
+                assocStart,
+                assocEnd,
+                aggr);
     }
 
     /**
@@ -143,7 +143,7 @@ public class ActionAggregation extends UndoableAction {
         this.associationEnd1 = associationEnd1;
         this.associationEnd2 = associationEnd2;
     }
-    
+
     /**
      * Build a description string from the given association ends,
      * and the navigability.
@@ -158,9 +158,9 @@ public class ActionAggregation extends UndoableAction {
                                          final Object assocEnd2,
                                          final int aggr) {
         String startName =
-            Model.getFacade().getName(Model.getFacade().getType(assocEnd1));
+                Model.getFacade().getName(Model.getFacade().getType(assocEnd1));
         String endName =
-            Model.getFacade().getName(Model.getFacade().getType(assocEnd2));
+                Model.getFacade().getName(Model.getFacade().getType(assocEnd2));
 
         if (startName == null || startName.length() == 0) {
             startName = Translator.localize("action.navigation.anon");
@@ -168,44 +168,44 @@ public class ActionAggregation extends UndoableAction {
         if (endName == null || endName.length() == 0) {
             endName = Translator.localize("action.navigation.anon");
         }
-        
+
         if (aggr == COMPOSITE_END1) {
             return Translator.messageFormat(
                     "action.aggregation.composite",
                     new Object[] {
-                        startName,
-                        endName,
+                            startName,
+                            endName,
                     }
             );
         } else if (aggr == COMPOSITE_END2) {
             return Translator.messageFormat(
                     "action.aggregation.composite",
                     new Object[] {
-                        endName,
-                        startName,
+                            endName,
+                            startName,
                     }
             );
         } else if (aggr == AGGREGATE_END1) {
             return Translator.messageFormat(
                     "action.aggregation.aggregate",
                     new Object[] {
-                        startName,
-                        endName,
+                            startName,
+                            endName,
                     }
             );
         } else if (aggr == AGGREGATE_END2) {
             return Translator.messageFormat(
                     "action.aggregation.aggregate",
                     new Object[] {
-                        endName,
-                        startName,
+                            endName,
+                            startName,
                     }
             );
         } else {
             return Translator.localize("action.aggregation.none");
         }
     }
-    
+
     /**
      * The constructor.
      * @param a the aggregation kind object
@@ -217,10 +217,10 @@ public class ActionAggregation extends UndoableAction {
         super(Translator.localize(Model.getFacade().getName(a)),
                 null);
         // Set the tooltip string:
-        putValue(Action.SHORT_DESCRIPTION, 
+        putValue(Action.SHORT_DESCRIPTION,
                 Translator.localize(Model.getFacade().getName(a)));
-	str = s;
-	agg = a;
+        str = s;
+        agg = a;
     }
 
     /*
@@ -271,14 +271,14 @@ public class ActionAggregation extends UndoableAction {
             Model.getCoreHelper().setAggregation(ascEnd, agg);
         }
     }
-    
-    
+
+
     /*
      * @see org.tigris.gef.undo.UndoableAction#isEnabled()
      */
     @Override
     public boolean isEnabled() {
-	return true;
+        return true;
     }
 
 
