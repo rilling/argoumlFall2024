@@ -253,7 +253,7 @@ public class ProfileConfigurationFilePersister extends MemberFilePersister {
 		w.println("</profile>");
 	    }
 	} catch (Exception e) {
-	    e.printStackTrace();
+        LOG.log(Level.SEVERE, "Exception in saveProjectMember", e);
 	    throw new SaveException(e);
 	}
     }
