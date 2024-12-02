@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -235,7 +236,7 @@ class ZargoFilePersister extends UmlFilePersister {
      */
     @Override
     public Project doLoad(File file)
-        throws OpenException, InterruptedException {
+            throws OpenException, InterruptedException {
 
         ProgressMgr progressMgr = new ProgressMgr();
         progressMgr.setNumberOfPhases(3 + UML_PHASES_LOAD);
@@ -243,25 +244,44 @@ class ZargoFilePersister extends UmlFilePersister {
 
         int fileVersion;
         String releaseVersion;
+        // Validate and sanitize the URL to ensure safety
+        if (isValidUrl(argourl)) {
+            fileVersion = getPersistenceVersion(argourl.openStream());
+        } else {
+            throw new OpenException("Invalid URL detected");
+        }        
         try {
             String argoEntry = getEntryNames(file, ".argo").iterator().next();
+
+            // Validate the argoEntry for safety
+            if (!isValidEntryName(argoEntry)) {
+                throw new OpenException("Invalid or unsafe .argo entry name");
+            }
+
             URL argoUrl = makeZipEntryUrl(toURL(file), argoEntry);
-            fileVersion = getPersistenceVersion(argoUrl.openStream());
-            releaseVersion = getReleaseVersion(argoUrl.openStream());
+
+            // Validate the URL for SSRF prevention
+            if (!isValidUrl(argoUrl)) {
+                throw new OpenException("Invalid or unsafe URL detected");
+            }
+
+            // Safely open the stream and close it properly
+            try (InputStream argoStream = argoUrl.openStream()) {
+                fileVersion = getPersistenceVersion(argoStream);
+            }
+
+            try (InputStream argoStream = argoUrl.openStream()) {
+                releaseVersion = getReleaseVersion(argoStream);
+            }
         } catch (MalformedURLException e) {
             throw new OpenException(e);
         } catch (IOException e) {
             throw new OpenException(e);
         }
 
-        // TODO: The commented code below was commented out by Bob Tarling
-        // in order to resolve bugs 4845 and 4857. Hopefully we can
-        // determine the cause and reintroduce.
-
-        //boolean upgradeRequired = !checkVersion(fileVersion, releaseVersion)
         boolean upgradeRequired = true;
 
-        // Upgrade is in the way for UML2 projects, so we turn it off in that case:
+        // Disable upgrade for UML2 projects
         if (Model.getFacade().getUmlVersion().charAt(0) == '2') {
             upgradeRequired = false;
         }
@@ -280,8 +300,30 @@ class ZargoFilePersister extends UmlFilePersister {
 
         PersistenceManager.getInstance().setProjectURI(file.toURI(), p);
         return p;
-
     }
+
+    // Utility to validate entry name (only alphanumeric and limited special chars allowed)
+    private static boolean isValidEntryName(String entryName) {
+        String allowedPattern = "^[a-zA-Z0-9_.-]+$";
+        return entryName != null && Pattern.matches(allowedPattern, entryName);
+    }
+
+    // Utility to validate URL for SSRF prevention
+    private static boolean isValidUrl(URL url) {
+        String protocol = url.getProtocol();
+        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+            return false;
+        }
+
+        // Restrict access to private/internal networks
+        String host = url.getHost();
+        if ("localhost".equalsIgnoreCase(host) || host.startsWith("127.") || host.startsWith("10.") || host.startsWith("192.168.")) {
+            return false;
+        }
+
+        return true;
+    }
+
 
     private Project loadFromZargo(File file, ProgressMgr progressMgr)
         throws OpenException {

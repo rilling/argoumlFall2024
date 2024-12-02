@@ -305,19 +305,6 @@ public class UMLEditableComboBox extends UMLComboBox implements
             panel.removeActionListener(l);
         }
 
-        /*
-         * @see javax.swing.ComboBoxEditor#selectAll()
-         */
-        public void selectAll() {
-            super.selectAll();
-        }
-
-        /*
-         * @see javax.swing.ComboBoxEditor#getItem()
-         */
-        public Object getItem() {
-            return panel.getText();
-        }
 
     }
 
