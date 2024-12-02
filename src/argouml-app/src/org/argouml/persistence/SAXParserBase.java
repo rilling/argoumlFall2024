@@ -42,6 +42,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,6 +81,19 @@ abstract class SAXParserBase extends DefaultHandler {
      * Switching this to true gives some extra logging messages.
      */
     protected static final boolean DBG = false;
+    private static final String[] ALLOWED_PROTOCOLS = {"http", "https"};
+    private boolean isAllowedProtocol(URL url) {
+        for (String allowedProtocol : ALLOWED_PROTOCOLS) {
+            if (url.getProtocol().equalsIgnoreCase(allowedProtocol)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean isAllowedHost(URL url) {
+        String allowedHost = "trusted-host.com";
+        return url.getHost().equalsIgnoreCase(allowedHost);
+    }
 
     /**
      * This acts as a stack of elements.<p>
@@ -306,30 +320,33 @@ abstract class SAXParserBase extends DefaultHandler {
      * @see org.xml.sax.EntityResolver#resolveEntity(java.lang.String,
      *         java.lang.String)
      */
-    public InputSource resolveEntity (String publicId, String systemId)
-        throws SAXException {
+    public InputSource resolveEntity(String publicId, String systemId) {
+        // Validate the URL before proceeding
         try {
-	    URL testIt = new URL(systemId);
-            InputSource s = new InputSource(testIt.openStream());
-            return s;
-        } catch (Exception e) {
-            LOG.log(Level.INFO,
-                    "NOTE: Could not open DTD " + systemId
-                    + " due to exception");
+            URL url = new URL(systemId);
 
-            String dtdName = systemId.substring(systemId.lastIndexOf('/') + 1);
-            String dtdPath = "/org/argouml/persistence/" + dtdName;
-            InputStream is = SAXParserBase.class.getResourceAsStream(dtdPath);
-            if (is == null) {
-                try {
-                    is = new FileInputStream(dtdPath.substring(1));
-                } catch (Exception ex) {
-                    throw new SAXException(e);
-                }
+            // Check the protocol to ensure it's part of the allowed list
+            if (!isAllowedProtocol(url)) {
+                throw new SecurityException("Disallowed URL protocol: " + url.getProtocol());
             }
-            return new InputSource(is);
+
+            // Optionally, check if the host is allowed (could add more logic here)
+            if (!isAllowedHost(url)) {
+                throw new SecurityException("Disallowed host: " + url.getHost());
+            }
+
+            // Perform the normal entity resolution if validation passes
+            InputStream inputStream = url.openStream();
+            InputSource inputSource = new InputSource(inputStream);
+            return inputSource;
+
+        } catch (MalformedURLException e) {
+            throw new SecurityException("Malformed URL: " + systemId, e);
+        } catch (IOException e) {
+            throw new SecurityException("Error opening stream for URL: " + systemId, e);
         }
     }
+
 
     /**
      * @param cls the class
