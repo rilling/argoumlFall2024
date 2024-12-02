@@ -47,9 +47,7 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -186,8 +184,12 @@ public class Main {
             if (batch) {
                 // TODO: Add an "open most recent project" command so that
                 // command state can be decoupled from user settings?
-                performCommandsInternal(commands);
-                commands = null;
+                if (!commands.isEmpty()) {
+                    performCommandsInternal(commands);
+                } else {
+                    System.out.println("No valid commands to execute.");
+                }
+
 
                 System.out.println("Exiting because we are running in batch.");
                 new ActionExit().doCommand(null);
@@ -330,6 +332,13 @@ public class Main {
             if (args[i].startsWith("-")) {
                 String themeName = LookAndFeelMgr.getInstance()
                         .getThemeClassNameFromArg(args[i]);
+
+                if (isValidCommand(args[i + 1])) {
+                    commands.add(args[i + 1]);
+                } else {
+                    System.out.println("Invalid command: " + args[i + 1]);
+                }
+
                 if (themeName != null) {
                     theTheme = themeName;
                 } else if (args[i].equalsIgnoreCase("-help")
@@ -342,10 +351,6 @@ public class Main {
                     doSplash = false;
                 } else if (args[i].equalsIgnoreCase("-norecentfile")) {
                     reloadRecent = false;
-                } else if (args[i].equalsIgnoreCase("-command")
-                        && i + 1 < args.length) {
-                    commands.add(args[i + 1]);
-                    i++;
                 } else if (args[i].equalsIgnoreCase("-locale")
                         && i + 1 < args.length) {
                     Translator.setLocale(args[i + 1]);
@@ -382,6 +387,16 @@ public class Main {
             }
         }
     }
+
+    private static boolean isValidCommand(String command) {
+        List<String> allowedCommands = List.of(
+                "ValidCommand1",
+                "ValidCommand2",
+                "ValidCommand3"
+        );
+        return allowedCommands.contains(command);
+    }
+
 
     private static ProjectBrowser initializeSubsystems(SimpleTimer st,
             SplashScreen splash) {
@@ -614,73 +629,41 @@ public class Main {
      * @param list The commands, a list of strings.
      */
     private static void performCommandsInternal(List<String> list) {
+        // Predefined registry mapping commands to implementations
+        Map<String, CommandLineInterface> commandRegistry = new HashMap<>();
+        commandRegistry.put("ValidCommand1", new ValidCommand());
+        commandRegistry.put("ValidCommand2", new ValidCommand());
+        commandRegistry.put("ValidCommand3", new ValidCommand());
+
         for (String commandString : list) {
             int pos = commandString.indexOf('=');
 
-            String commandName;
-            String commandArgument;
-
-            if (pos == -1) {
-                commandName = commandString;
-                commandArgument = null;
-            } else {
-                commandName = commandString.substring(0, pos);
-                commandArgument = commandString.substring(pos + 1);
-            }
-
-            // Perform one command.
-            Class c;
-            try {
-                c = Class.forName(commandName);
-            } catch (ClassNotFoundException e) {
-                System.out.println("Cannot find the command: " + commandName);
+            // Validate command format
+            if (pos == -1 || pos == commandString.length() - 1) {
+                System.out.println("Invalid command format: " + commandString);
                 continue;
             }
 
-            // Now create a new object.
-            Object o = null;
-            try {
-                o = c.newInstance();
-            } catch (InstantiationException e) {
-                System.out.println(commandName
-                        + " could not be instantiated - skipping"
-                        + " (InstantiationException)");
-                continue;
-            } catch (IllegalAccessException e) {
-                System.out.println(commandName
-                        + " could not be instantiated - skipping"
-                        + " (IllegalAccessException)");
+            String commandName = commandString.substring(0, pos);
+            String commandArgument = commandString.substring(pos + 1);
+
+            // Look up the command in the registry
+            CommandLineInterface clio = commandRegistry.get(commandName);
+
+            if (clio == null) {
+                System.out.println("Command not found or not allowed: " + commandName);
                 continue;
             }
 
-            if (o == null || !(o instanceof CommandLineInterface)) {
-                System.out.println(commandName
-                        + " is not a command - skipping.");
-                continue;
-            }
-
-            CommandLineInterface clio = (CommandLineInterface) o;
-
-            System.out.println("Performing command "
-                    + commandName + "( "
-                    + (commandArgument == null
-                            ? ""
-                            : commandArgument)
-                    + " )");
+            // Execute the command
             boolean result = clio.doCommand(commandArgument);
             if (!result) {
-                System.out.println("There was an error executing "
-                        + "the command "
-                        + commandName + "( "
-                        + (commandArgument == null
-                                ? ""
-                                : commandArgument)
-                        + " )");
-                System.out.println("Aborting the rest of the commands.");
-                return;
+                System.out.println("Error executing command: " + commandName);
+                break;
             }
         }
     }
+
 
     /**
      * Create the .argouml directory if it doesn't exist.
@@ -821,6 +804,12 @@ public class Main {
         ArgoVersion.init();
     }
 
+    private static class ValidCommand implements CommandLineInterface {
+        @Override
+        public boolean doCommand(String argument) {
+            return false;
+        }
+    }
 } /* end Class Main */
 
 /**
