@@ -234,6 +234,7 @@ class ZargoFilePersister extends UmlFilePersister {
     /*
      * @see org.argouml.persistence.ProjectFilePersister#doLoad(java.io.File)
      */
+    
     @Override
     public Project doLoad(File file)
             throws OpenException, InterruptedException {
@@ -298,25 +299,28 @@ class ZargoFilePersister extends UmlFilePersister {
 
     // Utility to validate entry name (only alphanumeric and limited special chars allowed)
     private static boolean isValidEntryName(String entryName) {
-        String allowedPattern = "^[a-zA-Z0-9_.-]+$";
-        return entryName != null && Pattern.matches(allowedPattern, entryName);
-    }
+    String allowedPattern = "^[a-zA-Z0-9_.-]+$"; // Allow only alphanumeric, underscores, dots, and dashes
+    return entryName != null && Pattern.matches(allowedPattern, entryName);
+}
+
 
     // Utility to validate URL for SSRF prevention
     private static boolean isValidUrl(URL url) {
-        //     String protocol = url.getProtocol();
-//        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
-//            return false;
-//        }
-
-        // Restrict access to private/internal networks
-        String host = url.getHost();
-        if ("localhost".equalsIgnoreCase(host) || host.startsWith("127.") || host.startsWith("10.") || host.startsWith("192.168.")) {
+        String protocol = url.getProtocol();
+        // Restrict to safe protocols only
+        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
             return false;
         }
-
+    
+        // Restrict access to internal/private networks
+        String host = url.getHost();
+        if ("localhost".equalsIgnoreCase(host) || host.startsWith("127.") || host.startsWith("10.") || host.startsWith("192.168.") || host.startsWith("::1")) {
+            return false;
+        }
+    
         return true;
     }
+
 
 
     private Project loadFromZargo(File file, ProgressMgr progressMgr)
@@ -601,30 +605,37 @@ class ZargoFilePersister extends UmlFilePersister {
      * @throws IOException
      *             if there is a problem opening the file.
      */
-    private ZipInputStream openZipStreamAt(URL url, String ext)
-            throws IOException {
-        ZipInputStream zis = new ZipInputStream(url.openStream());
-        ZipEntry entry = zis.getNextEntry();
-        while (entry != null && !entry.getName().endsWith(ext)) {
-            entry = zis.getNextEntry();
+
+    private ZipInputStream openZipStreamAt(URL url, String ext) throws IOException {
+    ZipInputStream zis = new ZipInputStream(url.openStream());
+    ZipEntry entry = zis.getNextEntry();
+    while (entry != null) {
+        if (entry.getName().endsWith(ext) && isValidEntryName(entry.getName())) {
+            return zis; // Valid entry found
         }
-        if (entry == null) {
-            zis.close();
-            return null;
-        }
-        return zis;
+        entry = zis.getNextEntry();
     }
+    zis.close();
+    return null; // No valid entry found
+}
+
 
     private InputStream openZipEntry(URL url, String entryName)
             throws MalformedURLException, IOException {
         return makeZipEntryUrl(url, entryName).openStream();
     }
 
-    private URL makeZipEntryUrl(URL url, String entryName)
-            throws MalformedURLException {
-        String entryURL = "jar:" + url + "!/" + entryName;
-        return new URL(entryURL);
+    private URL makeZipEntryUrl(URL url, String entryName) throws MalformedURLException {
+    String entryURL = "jar:" + url + "!/" + entryName;
+    URL generatedUrl = new URL(entryURL);
+
+    // Validate the generated URL
+    if (!isValidUrl(generatedUrl)) {
+        throw new MalformedURLException("Invalid or unsafe URL detected: " + entryURL);
     }
+    return generatedUrl;
+}
+
 
     /**
      * A stream of input streams for reading the Zipped file.
