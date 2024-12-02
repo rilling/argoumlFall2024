@@ -244,6 +244,12 @@ class ZargoFilePersister extends UmlFilePersister {
 
         int fileVersion;
         String releaseVersion;
+        // Validate and sanitize the URL to ensure safety
+        if (isValidUrl(argourl)) {
+            fileVersion = getPersistenceVersion(argourl.openStream());
+        } else {
+            throw new OpenException("Invalid URL detected");
+        }        
         try {
             String argoEntry = getEntryNames(file, ".argo").iterator().next();
 
@@ -304,10 +310,10 @@ class ZargoFilePersister extends UmlFilePersister {
 
     // Utility to validate URL for SSRF prevention
     private static boolean isValidUrl(URL url) {
-        //     String protocol = url.getProtocol();
-//        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
-//            return false;
-//        }
+        String protocol = url.getProtocol();
+        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+            return false;
+        }
 
         // Restrict access to private/internal networks
         String host = url.getHost();
