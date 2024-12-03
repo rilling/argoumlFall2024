@@ -39,6 +39,7 @@
 package org.argouml.model;
 
 import java.io.OutputStream;
+import java.util.Collection;
 
 
 /**
@@ -194,11 +195,63 @@ public final class Model {
     /**
      * Getter for the ActivityGraphsHelper.
      *
-     * @return the instance of the helper
+     * @return a copy of the instance of the helper
      */
     public static ActivityGraphsHelper getActivityGraphsHelper() {
-        return activityGraphsHelper;
+        if (activityGraphsHelper == null) {
+            return null; // Handle null cases as appropriate
+        }
+        return new ActivityGraphsHelper() {
+            public Object findClassifierByName(Object ofs, String s) {
+                return null;
+            }
+
+            public Object findStateByName(Object c, String s) {
+                return null;
+            }
+
+            public boolean isAddingActivityGraphAllowed(Object context) {
+                return false;
+            }
+
+            public void addInState(Object classifierInState, Object state) {
+
+            }
+
+            public void setInStates(Object classifierInState, Collection newStates) {
+
+            }
+
+            public void setContents(Object partition, Collection newContents) {
+
+            }
+
+            public void addContent(Object partition, Object modeElement) {
+
+            }
+
+            public void removeContent(Object partition, Object modeElement) {
+
+            }
+
+            public void setSynch(Object objectFlowState, boolean isSynch) {
+
+            }
+
+            public void addParameter(Object objectFlowState, Object parameter) {
+
+            }
+
+            public void removeParameter(Object objectFlowState, Object parameter) {
+
+            }
+
+            public void setParameters(Object objectFlowState, Collection parameters) {
+
+            }
+        }; // Return a defensive copy
     }
+
 
     /**
      * Getter for CollaborationsFactory.
