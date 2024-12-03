@@ -333,7 +333,7 @@ public class Main {
                 String themeName = LookAndFeelMgr.getInstance()
                         .getThemeClassNameFromArg(args[i]);
 
-                if (isValidCommand(args[i + 1])) {
+                if (performCommands(args[i + 1])) {
                     commands.add(args[i + 1]);
                 } else {
                     System.out.println("Invalid command: " + args[i + 1]);
@@ -388,13 +388,8 @@ public class Main {
         }
     }
 
-    private static boolean isValidCommand(String command) {
-        List<String> allowedCommands = List.of(
-                "ValidCommand1",
-                "ValidCommand2",
-                "ValidCommand3"
-        );
-        return allowedCommands.contains(command);
+    private static boolean performCommands(String arg) {
+        return false;
     }
 
 
@@ -619,7 +614,6 @@ public class Main {
     public static void performCommands(List<String> list) {
         performCommandsInternal(list);
     }
-
     /**
      * Perform a list of commands that were given on the command line.
      *
@@ -656,10 +650,12 @@ public class Main {
             }
 
             // Execute the command
+            System.out.println("Performing command " + commandName + " with argument: " + commandArgument);
             boolean result = clio.doCommand(commandArgument);
             if (!result) {
-                System.out.println("Error executing command: " + commandName);
-                break;
+                System.out.println("There was an error executing the command: " + commandName);
+                System.out.println("Aborting the rest of the commands.");
+                return;
             }
         }
     }

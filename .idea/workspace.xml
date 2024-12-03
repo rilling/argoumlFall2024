@@ -6,7 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="895b27b6-2c86-4301-8f57-e703593a1f56" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/ZargoFilePersister.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/ZargoFilePersister.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/application/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/application/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,7 +20,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
@@ -34,8 +34,10 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "burhan2",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
