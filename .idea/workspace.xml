@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="895b27b6-2c86-4301-8f57-e703593a1f56" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/application/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/application/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/UmlFilePersister.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/persistence/UmlFilePersister.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/uml/reveng/ImportCommon.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-app/src/org/argouml/uml/reveng/ImportCommon.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/argouml-core-model-mdr/src/org/argouml/model/mdr/XmiReaderImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/argouml-core-model-mdr/src/org/argouml/model/mdr/XmiReaderImpl.java" afterDir="false" />
@@ -42,7 +43,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
@@ -63,9 +64,10 @@
     "Maven.argouml-core [spotbugs:check].executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "sw__vul",
+    "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
