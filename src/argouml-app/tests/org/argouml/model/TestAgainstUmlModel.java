@@ -47,10 +47,10 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.XMLConstants;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -92,18 +92,18 @@ public class TestAgainstUmlModel extends TestCase {
      * TODO: Unused?
      */
     public void testDataModel()
-	throws SAXException,
-	       IOException,
-	       ParserConfigurationException {
-	Document doc = prepareDocument();
-	if (doc == null) {
-	    return;		// Could not find model.
-	}
+        throws SAXException,
+               IOException,
+               ParserConfigurationException {
+        Document doc = prepareDocument();
+        if (doc == null) {
+            return;        // Could not find model.
+        }
 
-	List<String> classNames = getMetaclassNames(doc);
-	for (String className : classNames ) {
-	    processClass (className);
-	}
+        List<String> classNames = getMetaclassNames(doc);
+        for (String className : classNames ) {
+            processClass (className);
+        }
     }
 
    /*
@@ -208,11 +208,11 @@ public class TestAgainstUmlModel extends TestCase {
      * @param message that is to me printed.
      */
     private static void printInconclusiveMessage(String message) {
-	System.out.println(TestAgainstUmlModel.class.getName()
-                + ": WARNING: INCONCLUSIVE TEST!");
-	System.out.println(message);
-	System.out.println("You will have to fetch the model using the command"
-			   + " ant junit-get-model");
+        System.out.println(TestAgainstUmlModel.class.getName()
+                    + ": WARNING: INCONCLUSIVE TEST!");
+        System.out.println(message);
+        System.out.println("You will have to fetch the model using the command"
+                   + " ant junit-get-model");
     }
 
     /**
@@ -224,34 +224,36 @@ public class TestAgainstUmlModel extends TestCase {
      * @throws ParserConfigurationException when the parser finds wrong syntax
      */
     private static Document prepareDocument()
-	throws ParserConfigurationException, SAXException, IOException {
+        throws ParserConfigurationException, SAXException, IOException {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
 
-        DocumentBuilder builder = factory.newDocumentBuilder();
+        // Secure against XXE
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+        factory.setFeature("http://xml.org/sax/features/validation", false);
+        factory.setXIncludeAware(false);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
 
         String fileName = System.getProperty("test.model.uml");
 
-	if (fileName == null) {
-	    printInconclusiveMessage("The property test.model.uml "
-				     + "is not set.");
-	    return null;
-	}
-	File file = new File(fileName);
-	if (!file.exists()) {
-	    printInconclusiveMessage("The file " + fileName
-				     + " cannot be found.");
-	    return null;
-	}
-        builder.setValidation(false);
-
-        builder.setFeature( "http://xml.org/sax/features/validation", false );
-
-        builder.setFeature( "http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false );
-
-        builder.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+        if (fileName == null) {
+            printInconclusiveMessage("The property test.model.uml "
+                                     + "is not set.");
+            return null;
+        }
+        File file = new File(fileName);
+        if (!file.exists()) {
+            printInconclusiveMessage("The file " + fileName
+                                     + " cannot be found.");
+            return null;
+        }
 
         Document document = builder.parse(file);
 
@@ -275,13 +277,12 @@ public class TestAgainstUmlModel extends TestCase {
             System.out.println("Unknown metamodel type");
         }
         
-	return document;
+        return document;
     }
 
 
     /**
      * Walk through the UML Classes found.
-
      */
     private void processClass(String className) {
 
@@ -319,8 +320,6 @@ public class TestAgainstUmlModel extends TestCase {
         } catch (Exception e) {
             fail("Failed to get factory for " + name + " - " + e);
         }
-
-
     }
 
     /**
@@ -328,22 +327,22 @@ public class TestAgainstUmlModel extends TestCase {
      */
     public static Test suite() {
         TestSuite suite =
-	    new TestSuite("Tests for "
-			  + TestAgainstUmlModel.class.getPackage().getName());
+        new TestSuite("Tests for "
+                  + TestAgainstUmlModel.class.getPackage().getName());
 
-	Document doc = null;
-	try {
-	    doc = prepareDocument();
-	} catch (ParserConfigurationException e) {
-	    e.printStackTrace();
-	} catch (SAXException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	if (doc == null) {
-	    return suite;	// Could not find model.
-	}
+        Document doc = null;
+        try {
+            doc = prepareDocument();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (doc == null) {
+            return suite;    // Could not find model.
+        }
 
         for (String metaclassName : getMetaclassNames(doc)) {
             suite.addTest(new TestAgainstUmlModel(metaclassName));            
@@ -355,8 +354,6 @@ public class TestAgainstUmlModel extends TestCase {
     protected void runTest() throws Throwable {
         processClass(getName());
     }
-
-    
 
     /**
      * Initialize the lookup map to link the uml class names
@@ -443,10 +440,5 @@ public class TestAgainstUmlModel extends TestCase {
         // will cause a test in CheckUMLModelHelper to fail
 //        remap.put("Core:Permission", "Core:PackageImport");
     }
-
-
-
 }
-
-
 

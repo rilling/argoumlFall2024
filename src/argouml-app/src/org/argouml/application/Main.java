@@ -1,5 +1,5 @@
 /* $Id$
- *******************************************************************************
+ ***************************
  * Copyright (c) 2009-2012 Contributors - see below
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -9,7 +9,7 @@
  * Contributors:
  *    andreas
  *    mvw
- *******************************************************************************
+ ***************************
  *
  * Some portions of this file was previously release using the BSD License:
  */
@@ -102,7 +102,7 @@ import org.argouml.util.logging.SimpleTimer;
  * of ArgoUML application invocation:
  * non-GUI command line and Swing GUI.
  * <p>
- * 
+ *
  * NOTE: Functionality which should be common to all types of application
  * invocation (e.g. extension modules to be loaded) should added to some
  * common class and <b>not</b> here. Adding things here will cause behavior
@@ -143,7 +143,7 @@ public class Main {
 
     /**
      * The main entry point of ArgoUML.
-     * 
+     *
      * @param args command line parameters
      */
     public static void main(String[] args) {
@@ -240,7 +240,7 @@ public class Main {
             postLoadThead.start();
 
             LOG.log(Level.INFO, "\nprofile of load time ############");
-            for (Enumeration i = st.result(); i.hasMoreElements();) {
+            for (Enumeration<?> i = st.result(); i.hasMoreElements();) {
                 LOG.log(Level.INFO, "{0}", i.nextElement());
             }
             LOG.log(Level.INFO, "#################################\n");
@@ -297,7 +297,7 @@ public class Main {
                     }
 
                     public String i18nmessageFormat(String key,
-                            Object[] iArgs) {
+                                                    Object[] iArgs) {
                         return Translator.messageFormat(key, iArgs);
                     }
                 });
@@ -392,9 +392,8 @@ public class Main {
         return false;
     }
 
-
     private static ProjectBrowser initializeSubsystems(SimpleTimer st,
-            SplashScreen splash) {
+                                                       SplashScreen splash) {
         ProjectBrowser pb = null;
 
         st.mark("initialize model subsystem");
@@ -457,7 +456,7 @@ public class Main {
     }
 
     private static void openProject(SimpleTimer st, SplashScreen splash,
-            ProjectBrowser pb, File fileToOpen) {
+                                    ProjectBrowser pb, File fileToOpen) {
         if (splash != null) {
             splash.updateProgress(40);
         }
@@ -521,7 +520,7 @@ public class Main {
      * @param message the message to be shown in the splash
      */
     private static void updateProgress(SplashScreen splash, int percent,
-            String message) {
+                                       String message) {
         if (splash != null) {
             splash.showStatus(Translator.localize(message));
             splash.updateProgress(percent);
@@ -614,11 +613,9 @@ public class Main {
     public static void performCommands(List<String> list) {
         performCommandsInternal(list);
     }
+
     /**
      * Perform a list of commands that were given on the command line.
-     *
-     * This first implementation just has a list of commands that
-     * is possible to give.
      *
      * @param list The commands, a list of strings.
      */
@@ -650,16 +647,21 @@ public class Main {
             }
 
             // Execute the command
-            System.out.println("Performing command " + commandName + " with argument: " + commandArgument);
+            System.out.println("Performing command "
+                    + commandName + "( "
+                    + (commandArgument == null ? "" : commandArgument)
+                    + " )");
             boolean result = clio.doCommand(commandArgument);
             if (!result) {
-                System.out.println("There was an error executing the command: " + commandName);
+                System.out.println("There was an error executing the command: "
+                        + commandName + "( "
+                        + (commandArgument == null ? "" : commandArgument)
+                        + " )");
                 System.out.println("Aborting the rest of the commands.");
                 return;
             }
         }
     }
-
 
     /**
      * Create the .argouml directory if it doesn't exist.
@@ -698,24 +700,12 @@ public class Main {
                 "sun.awt.exception.handler",
                 ArgoAwtExceptionHandler.class.getName());
 
-        /*
-         * The string <code>log4j.configuration</code> is the
-         * same string found in
-         * {@link org.apache.log4j.Configuration.DEFAULT_CONFIGURATION_FILE}
-         * but if we use the reference, then log4j configures itself
-         * and clears the system property and we never know if it was
-         * set.
-         *
-         * If it is set, then we let the static initializer in
-         * {@link Argo} perform the initialization.
-         */
-
         LOG = Logger.getLogger(Main.class.getName());
     }
 
     /**
      * Create and display a splash screen.
-     * 
+     *
      * @return the splash screen
      */
     private static SplashScreen initializeSplash() {
@@ -773,8 +763,8 @@ public class Main {
         pb.setSize(w, h);
         pb.setExtendedState(Configuration.getBoolean(
                 Argo.KEY_SCREEN_MAXIMIZED, false)
-                        ? Frame.MAXIMIZED_BOTH
-                        : Frame.NORMAL);
+                ? Frame.MAXIMIZED_BOTH
+                : Frame.NORMAL);
 
         UIManager.put("Button.focusInputMap", new UIDefaults.LazyInputMap(
                 new Object[] {
@@ -803,10 +793,13 @@ public class Main {
     private static class ValidCommand implements CommandLineInterface {
         @Override
         public boolean doCommand(String argument) {
-            return false;
+            // Implement the command logic here
+            // Return true if successful, false otherwise
+            return true;
         }
     }
 } /* end Class Main */
+
 
 /**
  * Class to hold a list of actions to be perform and to perform them

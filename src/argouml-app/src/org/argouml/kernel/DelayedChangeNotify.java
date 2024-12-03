@@ -55,14 +55,18 @@ public class DelayedChangeNotify implements Runnable {
      * @param p the event
      */
     public DelayedChangeNotify(DelayedVChangeListener l,
-			       PropertyChangeEvent p) {
-	listener = l;
-	pce = p;
+                               PropertyChangeEvent p) {
+        listener = l;
+        // Create a defensive copy of the PropertyChangeEvent
+        pce = new PropertyChangeEvent(p.getSource(), p.getPropertyName(),
+                p.getOldValue(), p.getNewValue());
     }
 
     /*
      * @see java.lang.Runnable#run()
      */
-    public void run() { listener.delayedVetoableChange(pce); }
+    public void run() {
+        listener.delayedVetoableChange(pce);
+    }
 
 } /* end class DelayedChangeNotify */
